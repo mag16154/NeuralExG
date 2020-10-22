@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="4e6bfc1f-ee7d-4a1e-9114-4ce7fd6841f5" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../pyExploreNN/Pharma/RBFN2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/rrtAlgorithms/examples/rrt/rrt_2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/rrtAlgorithms/examples/rrt/rrt_2d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/rrtAlgorithms/examples/rrt/rrt_3d.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/rrtAlgorithms/examples/rrt/rrt_3d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/rrtAlgorithms/src/rrt/rrt.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/rrtAlgorithms/src/rrt/rrt.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/rrtAlgorithms/src/rrt/rrt_base.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/rrtAlgorithms/src/rrt/rrt_base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/rrtAlgorithms/src/search_space/search_space.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/rrtAlgorithms/src/search_space/search_space.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/rrtAlgorithms/src/utilities/plotting.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/rrtAlgorithms/src/utilities/plotting.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/NNConfiguration_setup/NNConfiguration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/NNConfiguration_setup/NNConfiguration_v1.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/NNConfiguration_v1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/NNConfiguration_setup/NNConfiguration_v2.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/NNConfiguration_setup/NNConfiguration_v2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/NNConfiguration_setup/ODESolver.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/NNConfiguration_setup/ODESolver.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/NNConfiguration_setup/configuration.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/NNConfiguration_setup/configuration.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/NNConfiguration_setup/diffEq.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/NNConfiguration_setup/diffEq.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/NNConfiguration_setup/frechet.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/NNConfiguration_setup/frechet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v/compute_v_v1.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_v_v1.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v/compute_v_v1.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_v_v1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v/compute_v_v2.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_v_v2.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v/compute_v_v2.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_v_v2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v/compute_v_v3.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_v_v3.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v/compute_v_v3.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_v_v3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v/compute_v_v4.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_v_v4.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v/compute_v_v4.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_v_v4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v/compute_v_v5.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_v_v5.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v_prime/compute_vprime_v1.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_vprime_v1.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v_prime/compute_vprime_v1.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_vprime_v1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v_prime/compute_vprime_v2.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_vprime_v2.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v_prime/compute_vprime_v2.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_vprime_v2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v_prime/compute_vprime_v3.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_vprime_v3.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v_prime/compute_vprime_v3.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_vprime_v3.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v_prime/compute_vprime_v4.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_vprime_v4.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v_prime/compute_vprime_v4.py" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_vprime_v4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_v_prime/compute_vprime_v5.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../pyExploreNN/Toremove/compute_vprime_v5.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_x_prime/compute_xprime_v1.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pyExploreNN/compute_x_prime/compute_xprime_v2.py" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectId" id="1hesi1ROW8svMaa7wThbOtOemwb" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/configuration-setup" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/configuration-setup" />
+      <recent name="$PROJECT_DIR$/core" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/core" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.circleRandom">
+    <configuration name="circleRandom" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="NeuralExplorerGradient" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/core" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/core/circleRandom.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="onnx_to_yaml" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="NeuralExplorerGradient" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/configuration-setup" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/configuration-setup/onnx_to_yaml.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="rrt_2d" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="NeuralExplorerGradient" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/core/rrt-algorithms/examples/rrt" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/core/rrt-algorithms/examples/rrt/rrt_2d.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="rrt_3d (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="NeuralExplorerGradient" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/core/rrtAlgorithms/examples/rrt" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/core/rrtAlgorithms/examples/rrt/rrt_3d.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="rrt_3d" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="NeuralExplorerGradient" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/core/rrt-algorithms/examples/rrt" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/core/rrt-algorithms/examples/rrt/rrt_3d.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.circleRandom" />
+        <item itemvalue="Python.onnx_to_yaml" />
+        <item itemvalue="Python.rrt_3d (1)" />
+        <item itemvalue="Python.rrt_2d" />
+        <item itemvalue="Python.rrt_3d" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4e6bfc1f-ee7d-4a1e-9114-4ce7fd6841f5" name="Default Changelist" comment="" />
+      <created>1600383015907</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1600383015907</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state width="1828" height="278" key="GridCell.Tab.0.bottom" timestamp="1602113255576">
+      <screen x="69" y="27" width="1851" height="1053" />
+    </state>
+    <state width="1828" height="278" key="GridCell.Tab.0.bottom/69.27.1851.1053@69.27.1851.1053" timestamp="1602113255576" />
+    <state width="1828" height="278" key="GridCell.Tab.0.center" timestamp="1602113255575">
+      <screen x="69" y="27" width="1851" height="1053" />
+    </state>
+    <state width="1828" height="278" key="GridCell.Tab.0.center/69.27.1851.1053@69.27.1851.1053" timestamp="1602113255575" />
+    <state width="1828" height="278" key="GridCell.Tab.0.left" timestamp="1602113255574">
+      <screen x="69" y="27" width="1851" height="1053" />
+    </state>
+    <state width="1828" height="278" key="GridCell.Tab.0.left/69.27.1851.1053@69.27.1851.1053" timestamp="1602113255574" />
+    <state width="1828" height="278" key="GridCell.Tab.0.right" timestamp="1602113255575">
+      <screen x="69" y="27" width="1851" height="1053" />
+    </state>
+    <state width="1828" height="278" key="GridCell.Tab.0.right/69.27.1851.1053@69.27.1851.1053" timestamp="1602113255575" />
+    <state width="1828" height="344" key="GridCell.Tab.1.bottom" timestamp="1601305607730">
+      <screen x="69" y="27" width="1851" height="1053" />
+    </state>
+    <state width="1828" height="344" key="GridCell.Tab.1.bottom/69.27.1851.1053@69.27.1851.1053" timestamp="1601305607730" />
+    <state width="1828" height="344" key="GridCell.Tab.1.center" timestamp="1601305607730">
+      <screen x="69" y="27" width="1851" height="1053" />
+    </state>
+    <state width="1828" height="344" key="GridCell.Tab.1.center/69.27.1851.1053@69.27.1851.1053" timestamp="1601305607730" />
+    <state width="1828" height="344" key="GridCell.Tab.1.left" timestamp="1601305607730">
+      <screen x="69" y="27" width="1851" height="1053" />
+    </state>
+    <state width="1828" height="344" key="GridCell.Tab.1.left/69.27.1851.1053@69.27.1851.1053" timestamp="1601305607730" />
+    <state width="1828" height="344" key="GridCell.Tab.1.right" timestamp="1601305607730">
+      <screen x="69" y="27" width="1851" height="1053" />
+    </state>
+    <state width="1828" height="344" key="GridCell.Tab.1.right/69.27.1851.1053@69.27.1851.1053" timestamp="1601305607730" />
+    <state x="483" y="187" key="SettingsEditor" timestamp="1601658691547">
+      <screen x="69" y="27" width="1851" height="1053" />
+    </state>
+    <state x="483" y="187" key="SettingsEditor/69.27.1851.1053@69.27.1851.1053" timestamp="1601658691547" />
+  </component>
+</project>
