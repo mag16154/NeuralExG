@@ -9,6 +9,9 @@ from sampler import generateRandomStates
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 from rbflayer import RBFLayer, InitCentersRandom
+from matplotlib.path import Path
+import matplotlib.patches as patches
+import random
 
 # version 1 RRT
 from rrtv1 import RRTV1
@@ -35,6 +38,22 @@ class Evaluation(object):
         self.staliro_run = False
         self.eval_dir = '../../eval/'
         self.dnn_rbf = dnn_rbf
+        self.rrt_run = False
+        self.f_iterations = 0
+        self.f_dist = None
+        self.f_rel_dist = None
+
+    def getFIterations(self):
+        return self.f_iterations
+
+    def getFDistance(self):
+        return self.f_dist
+
+    def getFRelDistance(self):
+        return self.f_rel_dist
+
+    def setStaliroRun(self):
+        self.staliro_run = True
 
     def getDataObject(self):
         assert self.data_object is not None
@@ -139,10 +158,97 @@ class Evaluation(object):
 
         return output
 
-    def plotInvSenResultsv1(self, trajectories, destination, d_time_step, dimensions, best_trajectory):
+    def plotInvSenStaliroResults(self, trajectories, best_trajectory):
+
+        u_x_min = self.usafelowerBoundArray[0]
+        u_x_max = self.usafeupperBoundArray[0]
+        u_y_min = self.usafelowerBoundArray[1]
+        u_y_max = self.usafeupperBoundArray[1]
+
+        u_verts = [
+            (u_x_min, u_y_min),  # left, bottom
+            (u_x_max, u_y_min),  # left, top
+            (u_x_max, u_y_max),  # right, top
+            (u_x_min, u_y_max),  # right, bottom
+            (u_x_min, u_y_min),  # ignored
+        ]
+
+        i_x_min = self.data_object.lowerBoundArray[0]
+        i_x_max = self.data_object.upperBoundArray[0]
+        i_y_min = self.data_object.lowerBoundArray[1]
+        i_y_max = self.data_object.upperBoundArray[1]
+
+        i_verts = [
+            (i_x_min, i_y_min),  # left, bottom
+            (i_x_max, i_y_min),  # left, top
+            (i_x_max, i_y_max),  # right, top
+            (i_x_min, i_y_max),  # right, bottom
+            (i_x_min, i_y_min),  # ignored
+        ]
+
+        codes = [
+            Path.MOVETO,
+            Path.LINETO,
+            Path.LINETO,
+            Path.LINETO,
+            Path.CLOSEPOLY,
+        ]
+
+        u_path = Path(u_verts, codes)
+
+        fig, ax = plt.subplots()
+
+        u_patch = patches.PathPatch(u_path, facecolor='red', lw=2)
+        ax.add_patch(u_patch)
+
+        i_path = Path(i_verts, codes)
+
+        i_patch = patches.PathPatch(i_path, facecolor='none', lw=1)
+        ax.add_patch(i_patch)
+
+        cmap = plt.get_cmap('gnuplot')
+        colors = [cmap(i) for i in np.linspace(0, 1, 10)]
+        # colors = ['red', 'black', 'blue', 'brown', 'green']
+
+        # dist_dict = {
+        #         "0": "0-0.1",
+        #         "1": "0.1-0.2",
+        #         "2": "0.2-0.3",
+        #         "3": "0.3-0.4",
+        #         "4": "0.4-0.5",
+        #         "5": "0.5-0.6",
+        #         "6": "0.6-0.7",
+        #         "7": "0.7-0.8",
+        #         "8": "0.8-0.9",
+        #         "9": ">=0.9"
+        # }
+        # ax.scatter(point[0], point[1], color=colors[idx], label=dist_dict.get(str(idx)))
+
+        x_index = 0
+        y_index = 1
+        n_trajectories = len(trajectories)
+        ax.plot(trajectories[0][:, x_index], trajectories[0][:, y_index], color=colors[7], label='Reference Trajectory')
+
+        for idx in range(1, n_trajectories - 1):
+            pred_init = trajectories[idx][0]
+            ax.scatter(pred_init[x_index], pred_init[y_index], color='g')
+
+        ax.plot(best_trajectory[:, 0], best_trajectory[:, 1], color=colors[1], label='Final Trajectory')
+
+        ax.set_xlabel('x1')
+        ax.set_ylabel('x2')
+        # ax.set_xlim(5, 10)
+        # ax.set_ylim(5, 30)
+        plt.legend()
+
+        plt.show()
+
+    def plotInvSenResultsv1(self, trajectories, destinations, d_time_step, dimensions, best_trajectory):
         n_trajectories = len(trajectories)
         cmap = plt.get_cmap('gnuplot')
         colors = [cmap(i) for i in np.linspace(0, 1, 10)]
+
+        destination = destinations[0]
         if dimensions == 2:
             plt.figure(1)
             x_index = 0
@@ -160,7 +266,20 @@ class Evaluation(object):
 
             plt.plot(best_trajectory[:, x_index], best_trajectory[:, y_index], 'b',
                      label='Final Trajectory')
+
             plt.plot(destination[x_index], destination[y_index], 'ko', label='Destination z')
+
+            for destination in destinations:
+                plt.plot(destination[x_index], destination[y_index], 'ko')
+
+            # c_center_x = 1.75
+            # c_center_y = -0.25
+            # c_size = 0.1
+            # deg = list(range(0, 360, 5))
+            # deg.append(0)
+            # xl = [c_center_x + c_size * math.cos(np.deg2rad(d)) for d in deg]
+            # yl = [c_center_y + c_size * math.sin(np.deg2rad(d)) for d in deg]
+            # plt.plot(xl, yl, color='k')
             plt.legend()
             plt.show()
         elif dimensions == 3:
@@ -183,8 +302,12 @@ class Evaluation(object):
 
             ax.plot3D(trajectories[n_trajectories - 1][:, x_index], trajectories[n_trajectories - 1][:, y_index],
                       trajectories[n_trajectories-1][:, z_index], color='blue', label='Final Trajectory')
+
             ax.scatter3D(destination[x_index], destination[y_index], destination[z_index], color='black',
                          label='Destination z')
+
+            for destination in destinations:
+                ax.scatter3D(destination[x_index], destination[y_index], destination[z_index], color='black')
             plt.legend()
             plt.show()
         elif dimensions == 4:
@@ -193,16 +316,22 @@ class Evaluation(object):
             y_index = 1
             plt.xlabel('x' + str(x_index))
             plt.ylabel('x' + str(y_index))
-            plt.plot(trajectories[0][:, x_index], trajectories[0][:, y_index], 'b', label='Reference')
-            for idx in range(1, n_trajectories-1):
+            plt.plot(trajectories[0][:, x_index], trajectories[0][:, y_index], color=colors[7],
+                     label='Reference Trajectory')
+            # starting_state = trajectories[0][d_time_step]
+            for idx in range(1, n_trajectories - 1):
                 pred_init = trajectories[idx][0]
                 pred_destination = trajectories[idx][d_time_step]
                 plt.plot(pred_init[x_index], pred_init[y_index], 'g^')
                 plt.plot(pred_destination[x_index], pred_destination[y_index], 'r^')
 
-            plt.plot(trajectories[n_trajectories-1][:, x_index], trajectories[n_trajectories-1][:, y_index], 'g',
-                     label='Final')
-            plt.plot(destination[x_index], destination[y_index], 'y*', label='Actual destination')
+            plt.plot(best_trajectory[:, x_index], best_trajectory[:, y_index], 'b',
+                     label='Final Trajectory')
+
+            plt.plot(destination[x_index], destination[y_index], 'ko', label='Destination z')
+
+            for destination in destinations:
+                plt.plot(destination[x_index], destination[y_index], 'ko')
             plt.legend()
             plt.show()
             plt.figure(1)
@@ -210,16 +339,22 @@ class Evaluation(object):
             y_index = 3
             plt.xlabel('x' + str(x_index))
             plt.ylabel('x' + str(y_index))
-            plt.plot(trajectories[0][:, x_index], trajectories[0][:, y_index], 'b', label='Reference')
-            for idx in range(1, n_trajectories-1):
+            plt.plot(trajectories[0][:, x_index], trajectories[0][:, y_index], color=colors[7],
+                     label='Reference Trajectory')
+            # starting_state = trajectories[0][d_time_step]
+            for idx in range(1, n_trajectories - 1):
                 pred_init = trajectories[idx][0]
                 pred_destination = trajectories[idx][d_time_step]
                 plt.plot(pred_init[x_index], pred_init[y_index], 'g^')
                 plt.plot(pred_destination[x_index], pred_destination[y_index], 'r^')
 
-            plt.plot(trajectories[n_trajectories-1][:, x_index], trajectories[n_trajectories-1][:, y_index], 'g',
-                     label='Final')
-            plt.plot(destination[x_index], destination[y_index], 'y*', label='Actual destination')
+            plt.plot(best_trajectory[:, x_index], best_trajectory[:, y_index], 'b',
+                     label='Final Trajectory')
+
+            plt.plot(destination[x_index], destination[y_index], 'ko', label='Destination z')
+
+            for destination in destinations:
+                plt.plot(destination[x_index], destination[y_index], 'ko')
             plt.legend()
             plt.show()
         elif dimensions == 6:
@@ -278,6 +413,7 @@ class Evaluation(object):
             plt.show()
 
     @staticmethod
+    # For rrt algorithms repo based path. Plot them in html
     def plotInvSenResultsv2(self, trajectories, destination, d_time_step, dimensions, rand_area, path_idx, dynamics):
 
         ss_dimensions = []
@@ -321,213 +457,18 @@ class Evaluation(object):
 
         plot.draw(auto_open=False)
 
-    def reachDestInvPathsRRTv2(self, dests=None, d_time_steps=None, threshold=0.1, correction_steps=[50],
-                               scaling_factors=[0.01], i_state=None, rand_area=None):
+    def reachDestInvRRTPaths(self, dests=None, d_time_steps=None, threshold=0.01, correction_steps=[50],
+                          scaling_factors=[0.01], i_state=None, dnn_or_rbf='RBF', layers=1, neurons=256,
+                              act_fn='ReLU', adaptation_run=False, rand_area=None, n_paths=2):
 
         ref_traj = self.data_object.generateTrajectories(r_states=i_state)[0]
         dest = dests[0]
         d_time_step = d_time_steps[0]
 
         assert self.data_object is not None
-
-        assert self.dynamics == self.data_object.dynamics
 
         dimensions = self.data_object.getDimensions()
-
-        dynamics = self.data_object.dynamics
-
-        model_rbf_f_name = self.eval_dir + 'models/model_vp_2_v_'
-        model_rbf_f_name = model_rbf_f_name + dynamics
-
-        if dynamics is 'Quadrotor':
-            model_rbf_f_name = model_rbf_f_name + "_" + 'dnn'
-        else:
-            model_rbf_f_name = model_rbf_f_name + "_" + 'RBF'
-        if dynamics is 'MC' or dynamics is 'ABS':
-            model_rbf_f_name = model_rbf_f_name + "_" + str(2)
-        elif dynamics is 'Quadrotor':
-            model_rbf_f_name = model_rbf_f_name + "_" + str(4)
-        else:
-            model_rbf_f_name = model_rbf_f_name + "_" + str(1)
-        model_rbf_f_name = model_rbf_f_name + "_" + str(256)
-        if dynamics is 'MC':
-            model_rbf_f_name = model_rbf_f_name + "_" + 'Sigmoid'
-        elif dynamics is 'Quadrotor':
-            model_rbf_f_name = model_rbf_f_name + "_" + 'Tanh'
-        else:
-            model_rbf_f_name = model_rbf_f_name + "_" + 'ReLU'
-        model_rbf_f_name = model_rbf_f_name + '.h5'
-
-        if path.exists(model_rbf_f_name):
-            model_rbf_v = load_model(model_rbf_f_name, compile=True, custom_objects={'RBFLayer': RBFLayer})
-            print("Model file " + model_rbf_f_name)
-        else:
-            print("Model file " + model_rbf_f_name + " does not exists.")
-            return
-
-        rrt_path_points = []
-        if dimensions == 2:
-            rrt = RRTV1(start=ref_traj[d_time_step],
-                        goal=dest,
-                        rand_area=rand_area,
-                        obstacle_list=[])
-            rrt_path_points = rrt.planning(animation=False)
-
-            rrt_path_points = rrt_path_points[::-1]
-
-        elif dimensions == 3:
-            ss_dimensions = []
-            for idx in range(dimensions):
-                tuple_idx = (rand_area[0][idx], rand_area[1][idx])
-                ss_dimensions.append(tuple_idx)
-
-            ss_dimensions = np.array(ss_dimensions) # dimensions of Search Space
-            # X_dimensions = np.array([(-2, 0), (0, 2), (0, 1)])
-            # create search space
-            search_space = SearchSpace(ss_dimensions)
-
-            # # obstacles
-            # Obstacles = np.array([])
-            print(ss_dimensions)
-            x_init = (ref_traj[d_time_step][0], ref_traj[d_time_step][1])  # starting location
-            x_goal = (dest[0], dest[1])  # goal location
-
-            if self.data_object.getDimensions() == 3:
-                x_init = (ref_traj[d_time_step][0], ref_traj[d_time_step][1],
-                          ref_traj[d_time_step][2])  # starting location
-                x_goal = (dest[0], dest[1], dest[2])  # goal location
-
-            print(x_init, x_goal)
-            Q = np.array([(8, 4)])  # length of tree edges
-            r = 5  # length of smallest edge to check for intersection with obstacles
-            max_samples = 100  # max number of samples to take before timing out
-            prc = 0.1  # probability of checking for a connection to goal
-
-            # create rrt_search
-            rrt = RRT(search_space, Q, x_init, x_goal, max_samples, r, prc)
-            rrt_path_points_tuples = rrt.rrt_search()
-            print(rrt_path_points_tuples)
-            rrt_path_points = []
-            for point in rrt_path_points_tuples:
-                path_point = [point[0], point[1], point[2]]
-                rrt_path_points.append(path_point)
-
-        rrt_path = []
-        for idx in range(len(rrt_path_points) - 1):
-            rrt_segment = [np.array(rrt_path_points[idx]), np.array(rrt_path_points[idx + 1])]
-            rrt_path.append(rrt_segment)
-
-        print(rrt_path)
-        paths_list = [rrt_path]
-
-        for paths in paths_list:
-            # print(paths)
-            for s_factor in scaling_factors:
-
-                for steps in correction_steps:
-                    if steps == 1:
-                        start_time = time.time()
-                        self.reachDestInvBaseline(ref_traj=ref_traj, paths=paths, d_time_step=d_time_step,
-                                                  threshold=threshold, model_v=model_rbf_v, iter_bound=self.iter_count,
-                                                  scaling_factor=s_factor, adaptation_factor=3/4, rand_area=rand_area,
-                                                  dynamics=dynamics)
-                        print("Time taken: " + str(time.time() - start_time))
-                    else:
-                        start_time = time.time()
-                        self.reachDestInvNonBaseline(ref_traj=ref_traj, paths=paths, d_time_step=d_time_step,
-                                                     threshold=threshold, model_v=model_rbf_v, correction_steps=steps,
-                                                     scaling_factor=s_factor, iter_bound=self.iter_count,
-                                                     adaptation_factor=3/4, rand_area=rand_area, dynamics=dynamics)
-                        print("Time taken: " + str(time.time() - start_time))
-
-    def reachDestInvPathsRRT(self, dests=None, d_time_steps=None, threshold=0.1, correction_steps=[50],
-                     scaling_factors=[0.01], i_state=None, rand_area=None):
-
-        ref_traj = self.data_object.generateTrajectories(r_states=i_state)[0]
-        dest = dests[0]
-        d_time_step = d_time_steps[0]
-
-        assert self.data_object is not None
-
-        assert self.dynamics == self.data_object.dynamics
-
-        dimensions = self.data_object.getDimensions()
-
-        dynamics = self.data_object.dynamics
-
-        model_rbf_f_name = self.eval_dir + 'models/model_vp_2_v_'
-        model_rbf_f_name = model_rbf_f_name + dynamics
-        if dynamics is 'Quadrotor':
-            model_rbf_f_name = model_rbf_f_name + "_" + 'dnn'
-        else:
-            model_rbf_f_name = model_rbf_f_name + "_" + 'RBF'
-        if dynamics is 'MC' or dynamics is 'ABS':
-            model_rbf_f_name = model_rbf_f_name + "_" + str(2)
-        elif dynamics is 'Quadrotor':
-            model_rbf_f_name = model_rbf_f_name + "_" + str(4)
-        else:
-            model_rbf_f_name = model_rbf_f_name + "_" + str(1)
-        model_rbf_f_name = model_rbf_f_name + "_" + str(256)
-        if dynamics is 'MC':
-            model_rbf_f_name = model_rbf_f_name + "_" + 'Sigmoid'
-        elif dynamics is 'Quadrotor':
-            model_rbf_f_name = model_rbf_f_name + "_" + 'Tanh'
-        else:
-            model_rbf_f_name = model_rbf_f_name + "_" + 'ReLU'
-        model_rbf_f_name = model_rbf_f_name + '.h5'
-
-        if path.exists(model_rbf_f_name):
-            model_rbf_v = load_model(model_rbf_f_name, compile=True, custom_objects={'RBFLayer': RBFLayer})
-            print("Model file " + model_rbf_f_name)
-        else:
-            print("Model file " + model_rbf_f_name + " does not exists.")
-            return
-
-        rrt = RRTV1(start=ref_traj[d_time_step], goal=dest, rand_area=rand_area, obstacle_list=[])
-        rrt_path_points = rrt.planning(animation=False)
-
-        rrt_paths_points = rrt_path_points[::-1]
-        # print(rrt_paths)
-        rrt_paths = []
-        for idx in range(len(rrt_paths_points)-1):
-            rrt_path = [np.array(rrt_paths_points[idx]), np.array(rrt_paths_points[idx+1])]
-            rrt_paths.append(rrt_path)
-
-        print(rrt_paths)
-        paths_list = [rrt_paths]
-
-        # print(paths_list)
-
-        for paths in paths_list:
-            # print(paths)
-            for s_factor in scaling_factors:
-
-                for steps in correction_steps:
-                    if steps == 1:
-                        start_time = time.time()
-                        self.reachDestInvBaseline(ref_traj=ref_traj, paths=paths, d_time_step=d_time_step,
-                                                  threshold=threshold, model_v=model_rbf_v, iter_bound=self.iter_count,
-                                                  scaling_factor=s_factor, adaptation_factor=3/4, dynamics=dynamics)
-                        print("Time taken: " + str(time.time() - start_time))
-                    else:
-                        start_time = time.time()
-                        self.reachDestInvNonBaseline(ref_traj=ref_traj, paths=paths, d_time_step=d_time_step,
-                                                     threshold=threshold, model_v=model_rbf_v, correction_steps=steps,
-                                                     scaling_factor=s_factor, iter_bound=self.iter_count,
-                                                     adaptation_factor=3/4, dynamics=dynamics)
-                        print("Time taken: " + str(time.time() - start_time))
-
-    ''' Divide the straight line path in 3 and rotate the first segment by some degrees to give an impression that 
-        this is an RRT-like path '''
-    def reachDestInvPaths(self, dests=None, d_time_steps=None, threshold=0.01, correction_steps=[50],
-                          scaling_factors=[0.01], i_state=None, dnn_or_rbf='RBF', layers=1, neurons=256, act_fn='ReLU',
-                          supp=False, adaptation_run=False):
-
-        ref_traj = self.data_object.generateTrajectories(r_states=i_state)[0]
-        dest = dests[0]
-        d_time_step = d_time_steps[0]
-
-        assert self.data_object is not None
+        self.rrt_run = True
 
         model_rbf_f_name = self.eval_dir + 'models/model_vp_2_v_'
         model_rbf_f_name = model_rbf_f_name + self.data_object.dynamics
@@ -548,45 +489,118 @@ class Evaluation(object):
             print("Model file " + model_rbf_f_name + " does not exists.")
             return
         print("Model file " + model_rbf_f_name)
-        # if dynamics is 'InvPendulum' or dynamics is 'CoupledVanderpol' or dynamics is 'SpringPendulum'
-        # or dynamics is 'OtherBench1' or dynamics is 'OtherBench':
-        #     model_rbf_f_name = model_rbf_f_name + "_" + 'dnn'
-        # else:
-        #     model_rbf_f_name = model_rbf_f_name + "_" + 'RBF'
-        #
-        # if dynamics is 'MC' or dynamics is 'ABS':
-        #     model_rbf_f_name = model_rbf_f_name + "_" + str(2)
-        # elif dynamics is 'InvPendulum' :
-        #     model_rbf_f_name = model_rbf_f_name + "_" + str(2)
-        # elif dynamics is 'ACC6Dim' or dynamics is 'CoupledVanderpol' or dynamics is 'SpringPendulum'
-        # or dynamics is 'OtherBench1' or dynamics is 'OtherBench':
-        #     model_rbf_f_name = model_rbf_f_name + "_" + str(4)
-        # else:
-        #     model_rbf_f_name = model_rbf_f_name + "_" + str(1)
-        #
-        # if dynamics is 'InvPendulum' or dynamics is 'SpringPendulum' or dynamics is 'OtherBench1':
-        #     model_rbf_f_name = model_rbf_f_name + "_" + str(128)
-        # else:
-        #     model_rbf_f_name = model_rbf_f_name + "_" + str(256)
-        #
-        # if dynamics is 'MC':
-        #     model_rbf_f_name = model_rbf_f_name + "_" + 'Sigmoid'
-        # elif dynamics is 'InvPendulum' or dynamics is 'ACC6Dim' or dynamics is 'OtherBench1':
-        #     model_rbf_f_name = model_rbf_f_name + "_" + 'Tanh'
-        # else:
-        #     model_rbf_f_name = model_rbf_f_name + "_" + 'ReLU'
-        # model_rbf_f_name = model_rbf_f_name + '.h5'
 
-        # if path.exists(model_rbf_f_name):
-        #     if dynamics is 'InvPendulum' or dynamics is 'CoupledVanderpol' or dynamics is 'SpringPendulum'
-        #     or dynamics is 'OtherBench1' or dynamics is 'OtherBench':
-        #         model_rbf_v = load_model(model_rbf_f_name, compile=True)
-        #     else:
-        #         model_rbf_v = load_model(model_rbf_f_name, compile=True, custom_objects={'RBFLayer': RBFLayer})
-        #     print("Model file " + model_rbf_f_name)
-        # else:
-        #     print("Model file " + model_rbf_f_name + " does not exists.")
-        #     return
+        paths_list = []
+
+        for p_idx in range(n_paths):
+            rrt_path_points = []
+            obstacleList = [
+                (1.75, -0.25, 0.1)
+            ]  # [x, y, radius]
+            if dimensions == 2:
+                rrt = RRTV1(start=ref_traj[d_time_step], goal=dest, rand_area=rand_area, obstacle_list=obstacleList)
+                rrt_path_points = rrt.planning(animation=False)
+
+                rrt_path_points = rrt_path_points[::-1]
+            elif dimensions == 3:
+                ss_dimensions = []
+                for idx in range(dimensions):
+                    tuple_idx = (rand_area[0][idx], rand_area[1][idx])
+                    ss_dimensions.append(tuple_idx)
+
+                ss_dimensions = np.array(ss_dimensions)  # dimensions of Search Space
+                # X_dimensions = np.array([(-2, 0), (0, 2), (0, 1)])
+                # create search space
+                search_space = SearchSpace(ss_dimensions)
+
+                # # obstacles
+                # Obstacles = np.array([])
+                print(ss_dimensions)
+
+                # uncomment this if you want to use it for 2-d systems
+                # x_init = (ref_traj[d_time_step][0], ref_traj[d_time_step][1])  # starting location
+                # x_goal = (dest[0], dest[1])  # goal location
+
+                x_init = (ref_traj[d_time_step][0], ref_traj[d_time_step][1], ref_traj[d_time_step][2])
+                # starting location
+                x_goal = (dest[0], dest[1], dest[2])  # goal location
+
+                print(x_init, x_goal)
+                Q = np.array([(8, 2)])  # length of tree edges
+                r = 5  # length of smallest edge to check for intersection with obstacles
+                max_samples = 100  # max number of samples to take before timing out
+                prc = 0.01  # probability of checking for a connection to goal
+
+                # create rrt_search
+                rrt = RRT(search_space, Q, x_init, x_goal, max_samples, r, prc)
+                rrt_path_points_tuples = rrt.rrt_search()
+                print(rrt_path_points_tuples)
+                rrt_path_points = []
+                for point in rrt_path_points_tuples:
+                    path_point = [point[0], point[1], point[2]]
+                    rrt_path_points.append(path_point)
+
+            # print(rrt_paths)
+
+            rrt_path = []
+            for idx in range(len(rrt_path_points)-1):
+                rrt_segment = [np.array(rrt_path_points[idx]), np.array(rrt_path_points[idx+1])]
+                rrt_path.append(rrt_segment)
+
+            paths_list.append(rrt_path)
+            print(rrt_path)
+
+        # print(paths_list)
+
+        adaptation_factor = 3/4
+
+        for paths in paths_list:
+            # print(paths)
+            for s_factor in scaling_factors:
+
+                for steps in correction_steps:
+                    if steps == 1:
+                        start_time = time.time()
+                        self.reachDestInvBaseline(ref_traj=ref_traj, paths=paths, d_time_step=d_time_step,
+                                                  threshold=threshold, model_v=model_rbf_v, iter_bound=self.iter_count,
+                                                  scaling_factor=s_factor, adaptation_run=adaptation_run,
+                                                  adaptation_factor=adaptation_factor)
+                        print("Time taken: " + str(time.time() - start_time))
+                    else:
+                        start_time = time.time()
+                        self.reachDestInvNonBaseline(ref_traj=ref_traj, paths=paths, d_time_step=d_time_step,
+                                                     threshold=threshold, model_v=model_rbf_v, correction_steps=steps,
+                                                     scaling_factor=s_factor, iter_bound=self.iter_count,
+                                                     adaptation_run=adaptation_run, adaptation_factor=adaptation_factor)
+                        print("Time taken: " + str(time.time() - start_time))
+
+    def reachDestInvPaths(self, dests=None, d_time_steps=None, threshold=0.01, correction_steps=[50],
+                          scaling_factors=[0.01], i_state=None, dnn_or_rbf='RBF', layers=1, neurons=256, act_fn='ReLU',
+                          adaptation_run=False):
+
+        ref_traj = self.data_object.generateTrajectories(r_states=i_state)[0]
+        dest = dests[0]
+        d_time_step = d_time_steps[0]
+
+        assert self.data_object is not None
+
+        model_rbf_f_name = self.eval_dir + 'models/model_vp_2_v_'
+        model_rbf_f_name = model_rbf_f_name + self.data_object.dynamics
+        model_rbf_f_name = model_rbf_f_name + "_" + dnn_or_rbf
+        model_rbf_f_name = model_rbf_f_name + "_" + str(layers)
+        model_rbf_f_name = model_rbf_f_name + "_" + str(neurons)
+        model_rbf_f_name = model_rbf_f_name + "_" + act_fn
+        model_rbf_f_name = model_rbf_f_name + '.h5'
+
+        if path.exists(model_rbf_f_name):
+            if dnn_or_rbf is 'dnn':
+                model_rbf_v = load_model(model_rbf_f_name, compile=True)
+            else:
+                model_rbf_v = load_model(model_rbf_f_name, compile=True, custom_objects={'RBFLayer': RBFLayer})
+        else:
+            print("Model file " + model_rbf_f_name + " does not exists.")
+            return
+        print("Model file " + model_rbf_f_name)
 
         # original_vector = dest - ref_traj[d_time_step]
         # original_vector_div = original_vector/3
@@ -599,6 +613,8 @@ class Evaluation(object):
         # # paths_list = [[path1, path2, path3]]
         paths_list = [[[ref_traj[d_time_step], dest]]]
 
+        # Divide the straight line path in 3 and rotate the first segment by some degrees to give an impression that
+        # this is an RRT-like path
         # angle15 = np.pi/12
         # rot_matrix15 = np.array([[math.cos(angle15), math.sin(angle15)], [-math.sin(angle15), math.cos(angle15)]])
         # original_vector_div_rot15 = np.dot(rot_matrix15, original_vector_div)
@@ -624,10 +640,9 @@ class Evaluation(object):
 
         # print(paths_list)
 
-        staliro_run = True
         f_iterations = None
         min_dist = None
-        adaptation_factor = 3/4
+        adaptation_factor = 1/2
         rel_dist = None
 
         for paths in paths_list:
@@ -652,18 +667,13 @@ class Evaluation(object):
                         print("Time taken: " + str(time.time() - start_time))
                     else:
                         start_time = time.time()
-                        f_iterations, min_dist, rel_dist = self.reachDestInvNonBaseline(ref_traj=ref_traj,
-                                                                                  paths=paths, d_time_step=d_time_step,
-                                                                                  threshold=threshold,
-                                                                                  model_v=model_rbf_v,
-                                                                                  correction_steps=steps,
-                                                                                  scaling_factor=s_factor,
-                                                                                  iter_bound=self.iter_count,
-                                                                                  adaptation_run=adaptation_run,
-                                                                                  adaptation_factor=adaptation_factor)
+                        self.reachDestInvNonBaseline(ref_traj=ref_traj, paths=paths, d_time_step=d_time_step,
+                                                     threshold=threshold,  model_v=model_rbf_v, correction_steps=steps,
+                                                     scaling_factor=s_factor, iter_bound=self.iter_count,
+                                                     adaptation_run=adaptation_run, adaptation_factor=adaptation_factor)
                         print("Time taken: " + str(time.time() - start_time))
 
-        if staliro_run is True:
+        if self.staliro_run is True:
             return f_iterations, min_dist, rel_dist
 
     def reachDestInvBaseline(self, ref_traj, paths, d_time_step, threshold, model_v, iter_bound, scaling_factor,
@@ -676,11 +686,13 @@ class Evaluation(object):
         # xp_val = paths[0][0]
         # print(x_val, xp_val)
         trajectories = [ref_traj]
-        best_state = None
+        rrt_dests = []
+
         for path_idx in range(n_paths):
             path = paths[path_idx]
             xp_val = path[0]
             dest = path[1]
+            rrt_dests.append(dest)
             scaling_factor = original_scaling_factor
             print("***** path idx " + str(path_idx) + " s_factor " + str(scaling_factor) + " correction steps 1")
             # print("destination " + str(dest))
@@ -692,11 +704,12 @@ class Evaluation(object):
             v_val = dest - x_val
             print(xp_val, dest)
             vp_val = dest - xp_val
-            dist = norm(vp_val, 2)
-            min_iter = before_adaptation_iter + after_adaptation_iter
+            vp_norm = norm(vp_val, 2)
+            min_iter = 0
             t_val = d_time_step
-            vp_val = [val / dist for val in vp_val]  # Normalized
+            vp_val = [val / vp_norm for val in vp_val]  # Normalized
             print(iter_bound)
+            dist = vp_norm
             print("Starting distance: " + str(dist))
             final_dist = dist
             original_distance = final_dist
@@ -746,7 +759,8 @@ class Evaluation(object):
                         # trajectories.pop()
                         print("Adaptations reached it's limits")
                         halt_adaptation = True
-                        # break
+                        # if self.staliro_run is True:
+                        #     break
                     else:
                         print("Before adaptation relative distance " + str(current_rel_dist))
                         # print("*** distance increased ****")
@@ -761,13 +775,18 @@ class Evaluation(object):
             best_trajectory = self.data_object.generateTrajectories(r_states=[best_state])[0]
             print("Final relative distance " + str(final_dist/original_distance))
             print("Min relative distance " + str(min_dist/original_distance))
-            print("Final dist: " + str(final_dist))
-            print("Min dist: " + str(min_dist))
+            # print("Final dist: " + str(final_dist))
+            # print("Min dist: " + str(min_dist))
             print("Min iter: " + str(min_iter))
-            print("Terminating state: " + str(x_val))
+            # print("Terminating state: " + str(x_val))
             print("Before adaptation iterations: " + str(before_adaptation_iter))
             print("Final iterations: " + str(before_adaptation_iter + after_adaptation_iter))
-            self.plotInvSenResultsv1(trajectories, dest, d_time_step, dimensions, best_trajectory)
+
+            self.f_iterations = before_adaptation_iter + after_adaptation_iter
+            self.f_dist = min_dist
+            self.f_rel_dist = min_dist/original_distance
+
+            self.plotInvSenResultsv1(trajectories, rrt_dests, d_time_step, dimensions, best_trajectory)
             # self.plotInvSenResultsv2(trajectories, dest, d_time_step, dimensions, rand_area, path_idx,dynamics)
 
     def reachDestInvNonBaseline(self, ref_traj, paths, d_time_step, threshold, model_v, correction_steps, iter_bound,
@@ -782,10 +801,12 @@ class Evaluation(object):
         # xp_val = paths[0][0]
         # print(x_val, xp_val)
         trajectories = [ref_traj]
+        rrt_dests = []
         for path_idx in range(n_paths):
             path = paths[path_idx]
             xp_val = path[0]
             dest = path[1]
+            rrt_dests.append(dest)
             scaling_factor = original_scaling_factor
             print("***** path idx " + str(path_idx) + " s_factor " + str(scaling_factor) + " correction steps " +
                   str(correction_steps))
@@ -798,26 +819,28 @@ class Evaluation(object):
             xp_vals = []
             v_val = dest - x_val
             vp_val = dest - xp_val
-            dist = norm(vp_val, 2)
+            vp_norm = norm(vp_val, 2)
+            dist = vp_norm
             original_distance = dist
             final_dist = dist
             print("Starting distance: " + str(dist))
             min_dist = dist
             best_state = x_val
             halt_adaptation = False
+            min_iter = 0
 
             while final_dist > threshold and (before_adaptation_iter + after_adaptation_iter) < iter_bound:
 
                 x_vals.append(x_val)
                 xp_vals.append(xp_val)
                 t_val = d_time_step
-                vp_val = [val / dist for val in vp_val]  # Normalized
-                vp_val_scaled = [val * scaling_factor for val in vp_val]
+                vp_val_normalized = [val / vp_norm for val in vp_val]  # Normalized
+                vp_val_scaled = [val * scaling_factor for val in vp_val_normalized]
                 step = 0
                 prev_pred_dist = None
 
                 while step < correction_steps:
-                    data_point = self.data_object.createDataPoint(x_val, xp_val, v_val, vp_val, t_val)
+                    data_point = self.data_object.createDataPoint(x_val, xp_val, v_val, vp_val_normalized, t_val)
                     predicted_v = self.evalModel(input=data_point, eval_var='v', model=model_v)
                     predicted_v_scaled = [val * scaling_factor for val in predicted_v]
                     new_init_state = [self.check_for_bounds(x_val + predicted_v_scaled)]
@@ -825,9 +848,11 @@ class Evaluation(object):
                     xp_val = xp_val + vp_val_scaled
                     v_val = predicted_v_scaled
                     vp_val = dest - xp_val
+                    vp_norm = norm(vp_val, 2)
                     x_vals.append(x_val)
                     xp_vals.append(xp_val)
-                    pred_dist = norm(vp_val, 2)
+                    pred_dist = vp_norm
+                    vp_val_normalized = [val/vp_norm for val in vp_val]
                     # print("new distance: " + str(dist))
                     t_val = d_time_step
                     step += 1
@@ -847,6 +872,10 @@ class Evaluation(object):
                 if dist < min_dist:
                     min_dist = dist
                     best_state = x_val
+                    if adaptation_applied is False:
+                        min_iter = before_adaptation_iter
+                    else:
+                        min_iter = before_adaptation_iter + after_adaptation_iter
 
                 if adaptation_applied is False:
                     before_adaptation_iter = before_adaptation_iter + 1
@@ -862,12 +891,13 @@ class Evaluation(object):
 
                 elif adaptation_run is True and dist >= final_dist and halt_adaptation is False:
                     current_rel_dist = final_dist / original_distance
-                    if adaptations == 3 or (prev_dist_while_adaptation is not None and
+                    if adaptations == 2 or (prev_dist_while_adaptation is not None and
                                             current_rel_dist > prev_dist_while_adaptation):
                         # trajectories.pop()
                         print("Adaptations reached it's limits")
                         halt_adaptation = True
-                        break
+                        # if self.staliro_run is True:
+                        #     break
                     else:
                         print("Before adaptation relative distance " + str(current_rel_dist))
                         # print("*** distance increased ****")
@@ -881,15 +911,22 @@ class Evaluation(object):
             min_rel_dist = min_dist / original_distance
             best_trajectory = self.data_object.generateTrajectories(r_states=[best_state])[0]
             print("Final relative distance " + str(final_dist / original_distance))
-            print("min relative distance: " + str(min_rel_dist))
-            # print("Final dist: " + str(final_dist))
+            print("Min relative distance: " + str(min_rel_dist))
+            print("Min iter: " + str(min_iter))
+            print("Final dist: " + str(final_dist))
             # print("Terminating state: " + str(x_val))
-            # print("Before adaptation iterations: " + str(before_adaptation_iter))
+            print("Before adaptation iterations: " + str(before_adaptation_iter))
             print("Final iterations: " + str(before_adaptation_iter + after_adaptation_iter))
+            self.f_iterations = before_adaptation_iter + after_adaptation_iter
+            self.f_dist = min_dist
+            self.f_rel_dist = min_dist/original_distance
 
-            # self.plotInvSenResultsv1(trajectories, dest, d_time_step, dimensions, best_trajectory)
+            self.plotInvSenResultsv1(trajectories, rrt_dests, d_time_step, dimensions, best_trajectory)
             # self.plotInvSenResultsv2(trajectories, dest, d_time_step, dimensions, rand_area, path_idx, dynamics)
-            return before_adaptation_iter + after_adaptation_iter, min_dist, min_rel_dist
+
+            # if self.staliro_run:
+            #     self.plotInvSenStaliroResults(trajectories, best_trajectory)
+            # return before_adaptation_iter + after_adaptation_iter, min_dist, min_rel_dist
 
     def get_vp_direction_greedy(self, dimensions, scaling_factor, dest, xp_val):
         i_matrix = np.eye(dimensions)
@@ -925,10 +962,12 @@ class Evaluation(object):
         # xp_val = paths[0][0]
         # print(x_val, xp_val)
         trajectories = [ref_traj]
+        rrt_dests = []
         for path_idx in range(n_paths):
             path = paths[path_idx]
             xp_val = path[0]
             dest = path[1]
+            rrt_dests.append(dest)
             scaling_factor = original_scaling_factor
             print("***** path idx " + str(path_idx) + " s_factor " + str(scaling_factor) + " correction steps 1")
             # print("destination " + str(dest))
@@ -943,13 +982,15 @@ class Evaluation(object):
             # vp_val = dest - xp_val
             vp_direction = self.get_vp_direction_greedy(dimensions, scaling_factor, dest, xp_val)
             vp_val = vp_direction
-            # print("vp direction " + str(vp_direction))
-            dist = norm(vp_val, 2)
+            print("vp direction " + str(vp_direction))
+            vp_norm = norm(vp_val, 2)
             min_iter = before_adaptation_iter + after_adaptation_iter
             t_val = d_time_step
-            vp_val = [val / dist for val in vp_val]  # Normalized
+            vp_val = [val / vp_norm for val in vp_val]  # Normalized
             print(iter_bound)
+            # dist = vp_norm
             final_dist = norm(dest-xp_val, 2)
+            # final_dist = dist
             print("Starting distance: " + str(final_dist))
             original_distance = final_dist
             min_dist = final_dist
@@ -965,27 +1006,6 @@ class Evaluation(object):
                 x_val = new_traj[0]
                 xp_val = new_traj[d_time_step]
                 v_val = predicted_v_scaled
-
-                # i_matrix = np.eye(2)
-                # vp_direction_dist = None
-                # vp_direction = None
-                # for i_m_idx in range(len(i_matrix)):
-                #     vec_1 = i_matrix[i_m_idx]
-                #     vec_1 = [val * scaling_factor for val in vec_1]
-                #     temp_xp_val = xp_val + vec_1
-                #     temp_dist = norm(dest - temp_xp_val, 2)
-                #     if vp_direction_dist is None or temp_dist < vp_direction_dist:
-                #         vp_direction_dist = temp_dist
-                #         vp_direction = vec_1
-                #
-                #     vec_2 = i_matrix[i_m_idx]
-                #     vec_2 = [val * -scaling_factor for val in vec_2]
-                #     temp_xp_val = xp_val + vec_2
-                #     temp_dist = norm(dest - temp_xp_val, 2)
-                #     if temp_dist < vp_direction_dist:
-                #         vp_direction_dist = temp_dist
-                #         vp_direction = vec_2
-
                 # vp_val = dest - xp_val
                 # print("vp direction " + str(vp_direction))
                 vp_direction = self.get_vp_direction_greedy(dimensions, scaling_factor, dest, xp_val)
@@ -1022,7 +1042,8 @@ class Evaluation(object):
                         # trajectories.pop()
                         print("Adaptations reached it's limits")
                         halt_adaptation = True
-                        # break
+                        # if self.staliro_run is True:
+                        #     break
                     else:
                         print("Before adaptation relative distance " + str(current_rel_dist))
                         # print("*** distance increased ****")
@@ -1043,5 +1064,217 @@ class Evaluation(object):
             print("Terminating state: " + str(x_val))
             print("Before adaptation iterations: " + str(before_adaptation_iter))
             print("Final iterations: " + str(before_adaptation_iter + after_adaptation_iter))
-            self.plotInvSenResultsv1(trajectories, dest, d_time_step, dimensions, best_trajectory)
+            self.plotInvSenResultsv1(trajectories, rrt_dests, d_time_step, dimensions, best_trajectory)
             # self.plotInvSenResultsv2(trajectories, dest, d_time_step, dimensions, rand_area, path_idx,dynamics)
+            self.f_iterations = before_adaptation_iter + after_adaptation_iter
+            self.f_dist = min_dist
+            self.f_rel_dist = min_dist/original_distance
+
+    def plotFwdSenResults(self, ref_traj, delta_vecs, actual_dests, pred_dests):
+        if self.data_object.dimensions == 2:
+            plt.figure(1)
+            x_index = 0
+            y_index = 1
+            plt.xlabel('x' + str(x_index))
+            plt.ylabel('x' + str(y_index))
+            x_val = ref_traj[0]
+            plt.plot(ref_traj[:, x_index], ref_traj[:, y_index], 'b', label='Reference')
+            for idx in range(len(delta_vecs)):
+                delta_vec = delta_vecs[idx]
+                neighbor_state = [x_val[i] + delta_vec[i] for i in range(len(delta_vec))]
+                plt.plot(neighbor_state[x_index], neighbor_state[y_index], 'g*')
+
+            for idx in range(len(actual_dests)):
+                actual_dest = actual_dests[idx]
+                pred_dest = pred_dests[idx]
+                plt.plot(pred_dest[x_index], pred_dest[y_index], 'g^')
+                plt.plot(actual_dest[x_index], actual_dest[y_index], 'r*')
+            plt.legend()
+            plt.show()
+
+    def plotFwdsenTrajectories(self, ref_trajs, predicted_trajs, actual_trajs, max_time, x_vals=None, xp_vals=None):
+        x_index = 0
+        y_index = 1
+        n_trajs = len(predicted_trajs)
+        plt.plot(ref_trajs[0][0:max_time, x_index], ref_trajs[0][0:max_time, y_index], 'b', label='Reference trajectory')
+        plt.plot(predicted_trajs[n_trajs-1][0:max_time, x_index], predicted_trajs[n_trajs-1][0:max_time, y_index], 'r',
+                 label='Predicted trajectory')
+        plt.plot(actual_trajs[n_trajs-1][0:max_time, x_index], actual_trajs[n_trajs-1][0:max_time, y_index], 'g',
+                 label='Actual trajectory')
+        # for idx in range(1, n_trajs):
+        #     ref_traj = ref_trajs[idx]
+        #     plt.plot(ref_traj[0:max_time, x_index], ref_traj[0:max_time, y_index], 'b')
+        #     predicted_traj = predicted_trajs[idx]
+        #     actual_traj = actual_trajs[idx]
+        #     plt.plot(predicted_traj[0:max_time, x_index], predicted_traj[0:max_time, y_index], 'r')
+        #     plt.plot(actual_traj[0:max_time, x_index], actual_traj[0:max_time, y_index], 'g')
+
+        if x_vals is not None and len(x_vals) > 0:
+            plt.plot(x_vals[0][0], x_vals[0][1], 'r*', label='Initial states')
+            plt.plot(xp_vals[0][0], xp_vals[0][1], 'g*', label='Pred destination states')
+            for idx in range(1, len(x_vals)):
+                plt.plot(x_vals[idx][0], x_vals[idx][1], 'r*')
+                plt.plot(xp_vals[idx][0], xp_vals[idx][1], 'g*')
+
+        plt.legend()
+        plt.show()
+
+    def spaceExploreFwd(self, scaling_factors=0.01, dnn_or_rbf='RBF', layers=1, neurons=256,
+                        act_fn='ReLU', d_time_step=10):
+
+        n_vectors = 2
+        max_time = 200
+        assert self.data_object is not None
+
+        model_rbf_f_name = self.eval_dir + 'models/model_v_2_vp_'
+        model_rbf_f_name = model_rbf_f_name + self.data_object.dynamics
+        model_rbf_f_name = model_rbf_f_name + "_" + dnn_or_rbf
+        model_rbf_f_name = model_rbf_f_name + "_" + str(layers)
+        model_rbf_f_name = model_rbf_f_name + "_" + str(neurons)
+        model_rbf_f_name = model_rbf_f_name + "_" + act_fn
+        model_rbf_f_name = model_rbf_f_name + '.h5'
+
+        if path.exists(model_rbf_f_name):
+            if dnn_or_rbf is 'dnn':
+                model_rbf_vp = load_model(model_rbf_f_name, compile=True)
+            else:
+                model_rbf_vp = load_model(model_rbf_f_name, compile=True, custom_objects={'RBFLayer': RBFLayer})
+        else:
+            print("Model file " + model_rbf_f_name + " does not exists.")
+            return
+        print("Model file " + model_rbf_f_name)
+
+        vecs_in_unit_circle = generate_points_in_circle(n_samples=n_vectors, dim=self.data_object.dimensions)
+
+        delta_vecs = []
+        for vec in vecs_in_unit_circle:
+            delta_vec = [val * scaling_factors for val in vec]
+            delta_vecs.append(delta_vec)
+
+        pred_trajs = []
+        actual_trajs = []
+        original_ref_trajs = []
+        for idx in range(n_vectors):
+            ref_traj = self.data_object.generateTrajectories(samples=1)[0]
+            original_ref_trajs.append(ref_traj)
+            plt.plot(ref_traj[0:max_time, 0], ref_traj[0:max_time, 1], 'b')
+        plt.show()
+
+        xp_vals = []
+        x_vals = []
+        for idx in range(n_vectors):
+            d_time_step = random.randint(50, 150)
+            ref_traj = original_ref_trajs[idx]
+            delta_vec = delta_vecs[idx]
+            # pred_traj = None
+            x_val = ref_traj[0]
+            x_vals.append(x_val)
+            xp_vals.append(ref_traj[d_time_step])
+            for idy in range(0, 30):
+                v_val = delta_vec
+                v_norm = norm(v_val, 2)
+                v_val_scaled = [val / v_norm for val in v_val]
+                neighbor_state = [x_val[i] + delta_vec[i] for i in range(len(delta_vec))]
+                pred_traj = [neighbor_state]
+                for t_step in range(1, max_time):
+                    xp_val = ref_traj[t_step]
+                    t_val = t_step
+                    vp_val = v_val
+                    data_point = self.data_object.createDataPoint(x_val, xp_val, v_val_scaled, vp_val, t_val)
+                    predicted_vp = self.evalModel(input=data_point, eval_var='vp', model=model_rbf_vp)
+                    predicted_vp = predicted_vp * v_norm
+                    pred_dest = [xp_val[i] + predicted_vp[i] for i in range(len(xp_val))]
+                    pred_traj.append(pred_dest)
+                ref_traj = pred_traj
+                x_val = neighbor_state
+                x_vals.append(x_val)
+                xp_vals.append(ref_traj[d_time_step])
+
+            print("Done****")
+            ref_traj = np.array(ref_traj)
+            pred_trajs.append(ref_traj)
+            actual_traj = self.data_object.generateTrajectories(r_states=[ref_traj[0]])[0]
+            actual_trajs.append(actual_traj)
+        self.plotFwdsenTrajectories(original_ref_trajs, pred_trajs, actual_trajs, max_time, x_vals, xp_vals)
+
+    def spaceExploreFwd2(self, scaling_factors=0.01, dnn_or_rbf='RBF', layers=1, neurons=256,
+                        act_fn='ReLU'):
+
+        n_vectors = 4
+        max_time = 200
+        assert self.data_object is not None
+
+        model_rbf_f_name = self.eval_dir + 'models/model_v_2_vp_'
+        model_rbf_f_name = model_rbf_f_name + self.data_object.dynamics
+        model_rbf_f_name = model_rbf_f_name + "_" + dnn_or_rbf
+        model_rbf_f_name = model_rbf_f_name + "_" + str(layers)
+        model_rbf_f_name = model_rbf_f_name + "_" + str(neurons)
+        model_rbf_f_name = model_rbf_f_name + "_" + act_fn
+        model_rbf_f_name = model_rbf_f_name + '.h5'
+
+        if path.exists(model_rbf_f_name):
+            if dnn_or_rbf is 'dnn':
+                model_rbf_vp = load_model(model_rbf_f_name, compile=True)
+            else:
+                model_rbf_vp = load_model(model_rbf_f_name, compile=True, custom_objects={'RBFLayer': RBFLayer})
+        else:
+            print("Model file " + model_rbf_f_name + " does not exists.")
+            return
+        print("Model file " + model_rbf_f_name)
+
+        vecs_in_unit_circle = generate_points_in_circle(n_samples=10, dim=self.data_object.dimensions)
+
+        delta_vecs = []
+        for vec in vecs_in_unit_circle:
+            delta_vec = [val * scaling_factors for val in vec]
+            delta_vecs.append(delta_vec)
+
+        pred_trajs = []
+        actual_trajs = []
+        original_ref_trajs = []
+        for idx in range(n_vectors):
+            ref_traj = self.data_object.generateTrajectories(samples=1)[0]
+            original_ref_trajs.append(ref_traj)
+
+        xp_vals = []
+        x_vals = []
+        d_time_step = random.randint(20, 100)
+        ref_traj = original_ref_trajs[0]
+        plt.plot(ref_traj[0:max_time, 0], ref_traj[0:max_time, 1], 'b')
+        plt.show()
+        original_ref_trajs = [ref_traj]
+        for idx in range(n_vectors):
+            # ref_traj = original_ref_trajs[idx]
+            delta_vec = delta_vecs[random.randint(0, 9)]
+            x_val = ref_traj[0]
+            x_vals.append(x_val)
+            xp_vals.append(ref_traj[d_time_step])
+            for idy in range(0, 20):
+                v_val = delta_vec
+                v_norm = norm(v_val, 2)
+                v_val_scaled = [val / v_norm for val in v_val]
+                neighbor_state = [x_val[i] + delta_vec[i] for i in range(len(delta_vec))]
+                pred_traj = [neighbor_state]
+                for t_step in range(1, max_time):
+                    xp_val = ref_traj[t_step]
+                    t_val = t_step
+                    vp_val = v_val
+                    data_point = self.data_object.createDataPoint(x_val, xp_val, v_val_scaled, vp_val, t_val)
+                    predicted_vp = self.evalModel(input=data_point, eval_var='vp', model=model_rbf_vp)
+                    predicted_vp = predicted_vp * v_norm
+                    pred_dest = [xp_val[i] + predicted_vp[i] for i in range(len(xp_val))]
+                    pred_traj.append(pred_dest)
+                ref_traj = pred_traj
+                x_val = neighbor_state
+                x_vals.append(x_val)
+                xp_vals.append(ref_traj[d_time_step])
+
+            print("Done**** " + str(idx))
+            ref_traj = np.array(ref_traj)
+            pred_trajs.append(ref_traj)
+            actual_traj = self.data_object.generateTrajectories(r_states=[ref_traj[0]])[0]
+            actual_trajs.append(actual_traj)
+            self.plotFwdsenTrajectories(original_ref_trajs, pred_trajs, actual_trajs, max_time, x_vals, xp_vals)
+
+
+
