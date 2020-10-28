@@ -68,27 +68,27 @@ class configuration(object):
 
     def generateTrajectories4GradRun(self, scaling, samples, r_states):
         plant = None
-        yml_file_dir = '/home/manishg/Research/cps-falsification/NNControllersMatlab/'
+        yml_file_dir = '../../controllers-yml-files/'
         if self.dynamics is 'MC':
-            dnn_cntrl_fname = yml_file_dir + 'verisig/examples/mountain_car/' + 'sig16x16.yml'
+            dnn_cntrl_fname = yml_file_dir + 'verisig/mountain_car/' + 'sig16x16.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
             plant = Plant('MC', dnn_controller_obj, None, self.steps)
         elif self.dynamics is 'ABS':
-            dnn_cntrl_fname = yml_file_dir + 'verisig/examples/ABS/' + 'controller.yml'
-            dnn_tf_fname = yml_file_dir + 'verisig/examples/ABS/' + 'transform.yml'
+            dnn_cntrl_fname = yml_file_dir + 'NNV/ABS/' + 'controller.yml'
+            dnn_tf_fname = yml_file_dir + 'NNV/ABS/' + 'transform.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
             dnn_transform_obj = DnnController(dnn_tf_fname, 2)
             plant = Plant('ABS', dnn_controller_obj, dnn_transform_obj, self.steps)
         elif self.dynamics is 'Quadrotor':
-            dnn_cntrl_fname = yml_file_dir + 'verisig/examples/quadrotor/' + 'tanh20x20.yml'
+            dnn_cntrl_fname = yml_file_dir + 'verisig/quadrotor/' + 'tanh20x20.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
             plant = Plant('Quadrotor', dnn_controller_obj, None, self.steps)
         elif self.dynamics is 'InvPendulumD':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Invertedpendulum/' + 'IPController.yml'
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Inverted_pendulum/' + 'IPController.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
             plant = Plant('IPendulumD', dnn_controller_obj, None, self.steps)
         elif self.dynamics is 'InvPendulumC':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Invertedpendulum/' + 'IPController.yml'
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Inverted_pendulum/' + 'IPController.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
             plant = Plant('IPendulumC', dnn_controller_obj, None, self.steps)
             plant.dnn_controller.parseDNNYML('IPendulumC')
@@ -202,6 +202,9 @@ class configuration(object):
                                                   or self.dynamics is 'InvPendulumD'):
                             neighbor_trajectory = plant.getSimulations(states=[neighbor_state], do_not_parse=True)[0]
                         else:
+                            # Added below r_time statement to take care of the warning - haven't tested it though.
+                            # It has been working without this. If it causes an issue, comment it.
+                            r_time = np.linspace(0, self.timeStep * self.steps, self.steps + 1)
                             neighbor_trajectory = generateTrajectories(self.dynamics, [neighbor_state], r_time, plant)[0]
                         trajectories.append(neighbor_trajectory)
                 self.trajectories = trajectories
