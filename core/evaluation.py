@@ -310,7 +310,7 @@ class Evaluation(object):
                 ax.scatter3D(destination[x_index], destination[y_index], destination[z_index], color='black')
             plt.legend()
             plt.show()
-        elif dimensions == 4:
+        elif dimensions == 4 or dimensions == 5:
             plt.figure(1)
             x_index = 0
             y_index = 1
@@ -357,7 +357,7 @@ class Evaluation(object):
                 plt.plot(destination[x_index], destination[y_index], 'ko')
             plt.legend()
             plt.show()
-        elif dimensions == 6:
+        elif dimensions == 6 or dimensions == 7:
             plt.figure(1)
             x_index = 0
             y_index = 1
@@ -1197,8 +1197,7 @@ class Evaluation(object):
             actual_trajs.append(actual_traj)
         self.plotFwdsenTrajectories(original_ref_trajs, pred_trajs, actual_trajs, max_time, x_vals, xp_vals)
 
-    def spaceExploreFwd2(self, scaling_factors=0.01, dnn_or_rbf='RBF', layers=1, neurons=256,
-                        act_fn='ReLU'):
+    def spaceExploreFwd2(self, scaling_factors=0.01, dnn_or_rbf='RBF', layers=1, neurons=256, act_fn='ReLU'):
 
         n_vectors = 4
         max_time = 200
