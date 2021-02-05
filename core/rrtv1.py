@@ -30,7 +30,7 @@ class RRTV1:
             self.parent = None
 
     def __init__(self, start, goal, obstacle_list, rand_area,
-                 expand_dis=0.5, path_resolution=0.5, goal_sample_rate=5, max_iter=500):
+                 expand_dis=0.2, path_resolution=0.2, goal_sample_rate=10, max_iter=500):
         """
         Setting Parameter
         start:Start Position [x,y]
@@ -40,6 +40,7 @@ class RRTV1:
         """
 
         # change expand_dis and path_resolution to 0.2 for 'MC'
+        # expand_dis=0.2, path_resolution=0.2, goal_sample_rate=10, max_iter=500) for OBench2
 
         self.start = self.Node(start[0], start[1])
         self.end = self.Node(goal[0], goal[1])

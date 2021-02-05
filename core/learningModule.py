@@ -28,16 +28,21 @@ from kmeans_initializer import InitCentersKMeans
 
 class DataConfiguration(configuration):
 
-    def __init__(self, timeStep=0.01, dynamics='None', gradient_run=False, dimensions=2):
+    def __init__(self, timeStep=0.01, dynamics='None', gradient_run=False, dimensions=2, sensitivity='Inv'):
 
         configuration.__init__(self, timeStep=timeStep, dynamics=dynamics, dimensions=dimensions,
                                gradient_run=gradient_run)
         self.data = []
         self.dimensions = dimensions
-        self.eval_dir = '../../eval/'
+        self.eval_dir = '../../eval-cav/'
+        self.sensitivity = sensitivity
 
     def dumpDataConfiguration(self):
-        d_obj_f_name = self.eval_dir + '/dconfigs/d_object_' + self.dynamics
+        d_obj_f_name = self.eval_dir + '/dconfigs_inv/d_object_' + self.dynamics
+
+        if self.sensitivity is 'Fwd':
+            d_obj_f_name = self.eval_dir + '/dconfigs_fwd/d_object_' + self.dynamics
+
         d_obj_f_name += '.txt'
         if path.exists(d_obj_f_name):
             os.remove(d_obj_f_name)
@@ -235,6 +240,9 @@ class DataConfiguration(configuration):
     def getEvalDir(self):
         return self.eval_dir
 
+    def getSensitivity(self):
+        return self.sensitivity
+
     def getRandomDataPoints(self, num):
         data_points = []
         for val in range(num):
@@ -269,6 +277,15 @@ class CreateTrainNN(NNConfiguration):
 
     def createInputOutput(self, data_object, inp_vars, out_vars):
         assert data_object.getDynamics() == self.dynamics
+        sensitivity = data_object.getSensitivity()
+        for var in out_vars:
+            if var is 'v' and sensitivity is 'fwd':
+                print("Can not output v for forward sensitivity run. Either change sensitivity type or output var.")
+                return
+            elif var is 'vp' and sensitivity is 'inv':
+                print("Can not output vp for inverse sensitivity run. Either change sensitivity type or output var.")
+                return
+
         self.eval_dir = data_object.getEvalDir()
         inp_indices = []
         out_indices = []
@@ -519,8 +536,9 @@ class CreateTrainNN(NNConfiguration):
         # print("Max RMSE Test {}".format(max_se_test))
         # print("Min RMSE Train {}".format(min_se_train))
         # print("Min RMSE Test {}".format(min_se_test))
-        print("Mean RMSE Train {}".format(mse_train))
-        print("Mean RMSE Test {}".format(mse_test))
+
+        # print("Mean RMSE Train {}".format(mse_train))
+        # print("Mean RMSE Test {}".format(mse_test))
 
         max_re_train = 0.0
         mre_train = 0.0
@@ -543,6 +561,7 @@ class CreateTrainNN(NNConfiguration):
         mre_test = mre_test / (len(targets_test))
         # print("Max Relative Error Train {}".format(max_re_train))
         # print("Max Relative Error Test {}".format(max_re_test))
+
         print("Mean Relative Error Train {}".format(mre_train))
         print("Mean Relative Error Test {}".format(mre_test))
 
@@ -575,19 +594,19 @@ class CreateTrainNN(NNConfiguration):
             plt.plot(predicted_test_plt)
             plt.show()
 
-        if self.predict_var is 'v':
-            f_name = self.eval_dir + 'outputs/v_vals_'
-        else:
-            f_name = self.eval_dir + 'outputs/vp_vals_'
-        f_name = f_name + self.dynamics
-        f_name = f_name + "_" + self.DNN_or_RBF
-        if self.dynamics == "AeroBench":
-            f_name = f_name + "_"
-            f_name = f_name + str(self.dimensions)
-        f_name = f_name + ".txt"
-        if path.exists(f_name):
-            os.remove(f_name)
-        vals_f = open(f_name, "w")
+        # if self.predict_var is 'v':
+        #     f_name = self.eval_dir + 'outputs/v_vals_'
+        # else:
+        #     f_name = self.eval_dir + 'outputs/vp_vals_'
+        # f_name = f_name + self.dynamics
+        # f_name = f_name + "_" + self.DNN_or_RBF
+        # if self.dynamics == "AeroBench":
+        #     f_name = f_name + "_"
+        #     f_name = f_name + str(self.dimensions)
+        # f_name = f_name + ".txt"
+        # if path.exists(f_name):
+        #     os.remove(f_name)
+        # vals_f = open(f_name, "w")
 
         # for idx in range(0, t_shape[0]-1):
         #     vals_f.write(str(targets[idx]))

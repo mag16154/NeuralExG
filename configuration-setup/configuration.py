@@ -7,6 +7,7 @@ import numpy as np
 from sampler import generateRandomStates, generateSuperpositionSampler
 from ODESolver import generateTrajectories, plotTrajectories
 from nnControllerHybridSystems import DnnController, Plant
+from nonNNController import nonNNPlant
 import random
 from os import path
 import os.path
@@ -72,88 +73,179 @@ class configuration(object):
         if self.dynamics is 'MC':
             dnn_cntrl_fname = yml_file_dir + 'verisig/mountain_car/' + 'sig16x16.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('MC', dnn_controller_obj, None, self.steps)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
         elif self.dynamics is 'ABS':
             dnn_cntrl_fname = yml_file_dir + 'NNV/ABS/' + 'controller.yml'
             dnn_tf_fname = yml_file_dir + 'NNV/ABS/' + 'transform.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
             dnn_transform_obj = DnnController(dnn_tf_fname, 2)
-            plant = Plant('ABS', dnn_controller_obj, dnn_transform_obj, self.steps)
+            plant = Plant(self.dynamics, dnn_controller_obj, dnn_transform_obj, self.steps)
         elif self.dynamics is 'Quadrotor':
             dnn_cntrl_fname = yml_file_dir + 'verisig/quadrotor/' + 'tanh20x20.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('Quadrotor', dnn_controller_obj, None, self.steps)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
         elif self.dynamics is 'InvPendulumD':
             dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Inverted_pendulum/' + 'IPController.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
             plant = Plant('IPendulumD', dnn_controller_obj, None, self.steps)
-        elif self.dynamics is 'InvPendulumC':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Inverted_pendulum/' + 'IPController.yml'
-            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('IPendulumC', dnn_controller_obj, None, self.steps)
-            plant.dnn_controller.parseDNNYML('IPendulumC')
-        elif self.dynamics is 'ACC6Dim':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/ACC/' + 'acc_controller_3_20.yml'
-            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('ACC6d', dnn_controller_obj, None, self.steps)
         elif self.dynamics is 'OtherBenchDisc1':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Other/Benchmark1/' + 'controller.yml'
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Benchmark1/' + 'controller.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
             plant = Plant('OBenchmarkDisc1', dnn_controller_obj, None, self.steps)
         elif self.dynamics is 'OtherBenchC1':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Other/Benchmark1/' + 'controller.yml'
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Benchmark1/' + 'controller.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('OtherBenchC1', dnn_controller_obj, None, self.steps)
-            plant.dnn_controller.parseDNNYML('OtherBenchC1')
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
         elif self.dynamics is 'OtherBenchC2':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Other/Benchmark2/' + 'controller.yml'
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Benchmark2/' + 'controller.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('OtherBenchC2', dnn_controller_obj, None, self.steps)
-            plant.dnn_controller.parseDNNYML('OtherBenchC2')
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
         elif self.dynamics is 'OtherBenchC3':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Other/Benchmark3/' + 'controller.yml'
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Benchmark3/' + 'controller.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('OtherBenchC3', dnn_controller_obj, None, self.steps)
-            plant.dnn_controller.parseDNNYML('OtherBenchC3')
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
         elif self.dynamics is 'OtherBenchC4':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Other/Benchmark4/' + 'controller.yml'
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Benchmark4/' + 'controller.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('OtherBenchC4', dnn_controller_obj, None, self.steps)
-            plant.dnn_controller.parseDNNYML('OtherBenchC4')
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
         elif self.dynamics is 'OtherBenchC5':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Other/Benchmark5/' + 'controller.yml'
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Benchmark5/' + 'controller.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('OtherBenchC5', dnn_controller_obj, None, self.steps)
-            plant.dnn_controller.parseDNNYML('OtherBenchC5')
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
         elif self.dynamics is 'OtherBenchC6':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Other/Benchmark6/' + 'controller.yml'
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019//Benchmark6/' + 'controller.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('OtherBenchC6', dnn_controller_obj, None, self.steps)
-            plant.dnn_controller.parseDNNYML('OtherBenchC6')
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
         elif self.dynamics is 'OtherBenchC7':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Other/Benchmark7/' + 'controller.yml'
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Benchmark7/' + 'controller.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('OtherBenchC7', dnn_controller_obj, None, self.steps)
-            plant.dnn_controller.parseDNNYML('OtherBenchC7')
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
         elif self.dynamics is 'OtherBenchC8':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Other/Benchmark8/' + 'controller.yml'
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Benchmark8/' + 'controller.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('OtherBenchC8', dnn_controller_obj, None, self.steps)
-            plant.dnn_controller.parseDNNYML('OtherBenchC8')
-        elif self.dynamics is 'ACCNonLinear':
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'ACCNonLinear3L':
             dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/ACC/' + 'acc_controller_3_20.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('ACCNonLinear', dnn_controller_obj, None, self.steps)
-            plant.dnn_controller.parseDNNYML('ACCNonLinear')
-        elif self.dynamics is 'CartPole':
-            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Cart-pole/' + 'CartPole_Controller.yml'
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'ACCNonLinear5L':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/ACC/' + 'acc_controller_5_20.yml'
             dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
-            plant = Plant('CartPole', dnn_controller_obj, None, self.steps)
-            plant.dnn_controller.parseDNNYML('CartPole')
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'ACCNonLinear7L':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/ACC/' + 'acc_controller_7_20.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'ACCNonLinear10L':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/ACC/' + 'acc_controller_10_20.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'OtherBenchC9':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/Benchmark9-TORA/' + 'controllerTora_nnv.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'OtherBenchC9Tanh':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/Benchmark9-TORA-Tanh/' + 'controllerTora_nnv_tanh.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'OtherBenchC9Sigmoid':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/Benchmark9-TORA-Sigmoid/' + 'controllerTora_nnv_sigmoid.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'SinglePendulum':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/SinglePendulum/' + 'controller_single_pendulum.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'DoublePendulumLess':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/DoublePendulum/' + 'controller_double_pendulum_less.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'DoublePendulumMore':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/DoublePendulum/' + 'controller_double_pendulum_more.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'OtherBenchC10':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/Benchmark10-Unicycle/' + 'controller10_unicycle.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'InvPendulumC':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Inverted_pendulum/' + 'IPController.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'Airplane':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/Airplane/' + 'controller_airplane.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'CartPole':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Cart-pole/' + 'Cartpole_controller.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'CartPoleTanh':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2019/Cart-pole/' + 'Cartpole_controller_tanh.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant(self.dynamics, dnn_controller_obj, None, self.steps)
+            plant.dnn_controllers[0].parseDNNYML(self.dynamics)
+        elif self.dynamics is 'CartPoleLinControl':
+            plant = nonNNPlant('CartPoleLinControl')
+        elif self.dynamics is 'CartPoleLinControl2':
+            plant = nonNNPlant('CartPoleLinControl2')
+        elif self.dynamics is 'BouncingBall':
+            plant = nonNNPlant('BouncingBall')
+        elif self.dynamics is 'VertCAS':
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/VCAS/' + 'VertCAS_1.yml'
+            dnn_controller_obj = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant = Plant('VertCAS', dnn_controller_obj, None, self.steps)
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/VCAS/' + 'VertCAS_2.yml'
+            dnn_controller_obj2 = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant.append_controller(dnn_controller_obj2)
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/VCAS/' + 'VertCAS_3.yml'
+            dnn_controller_obj3 = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant.append_controller(dnn_controller_obj3)
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/VCAS/' + 'VertCAS_4.yml'
+            dnn_controller_obj4 = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant.append_controller(dnn_controller_obj4)
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/VCAS/' + 'VertCAS_5.yml'
+            dnn_controller_obj5 = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant.append_controller(dnn_controller_obj5)
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/VCAS/' + 'VertCAS_6.yml'
+            dnn_controller_obj6 = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant.append_controller(dnn_controller_obj6)
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/VCAS/' + 'VertCAS_7.yml'
+            dnn_controller_obj7 = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant.append_controller(dnn_controller_obj7)
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/VCAS/' + 'VertCAS_8.yml'
+            dnn_controller_obj8 = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant.append_controller(dnn_controller_obj8)
+            dnn_cntrl_fname = yml_file_dir + 'ARCH-2020/VCAS/' + 'VertCAS_9.yml'
+            dnn_controller_obj9 = DnnController(dnn_cntrl_fname, self.dimensions)
+            plant.append_controller(dnn_controller_obj9)
 
         if r_states is not None:
             if plant is not None and (self.dynamics is 'MC' or self.dynamics is 'ABS' or self.dynamics is 'Quadrotor'
-                                      or self.dynamics is 'OtherBenchDisc1' or self.dynamics is 'InvPendulumD'):
+                                      or self.dynamics is 'OtherBenchDisc1' or self.dynamics is 'InvPendulumD'
+                                      or self.dynamics is 'VertCAS'):
                 r_trajectories = plant.getSimulations(states=r_states)
             else:
                 r_time = np.linspace(0, self.timeStep * self.steps, self.steps + 1)
@@ -163,7 +255,7 @@ class configuration(object):
             if samples is not None:
                 if plant is not None and (self.dynamics is 'MC' or self.dynamics is 'ABS' or
                                           self.dynamics is 'Quadrotor' or self.dynamics is 'OtherBenchDisc1'
-                                          or self.dynamics is 'InvPendulumD'):
+                                          or self.dynamics is 'InvPendulumD' or self.dynamics is 'VertCAS'):
                     r_states = generateRandomStates(samples, self.lowerBoundArray, self.upperBoundArray)
                     r_trajectories = plant.getSimulations(states=r_states)
                 else:
@@ -176,7 +268,7 @@ class configuration(object):
                 r_states = generateRandomStates(self.samples, self.lowerBoundArray, self.upperBoundArray)
                 if plant is not None and (self.dynamics is 'MC' or self.dynamics is 'ABS'
                                           or self.dynamics is 'Quadrotor' or self.dynamics is 'OtherBenchDisc1'
-                                          or self.dynamics is 'InvPendulumD'):
+                                          or self.dynamics is 'InvPendulumD' or self.dynamics is 'VertCAS'):
                     r_trajectories = plant.getSimulations(states=r_states)
                 else:
                     r_time = np.linspace(0, self.timeStep * self.steps, self.steps + 1)
@@ -199,7 +291,7 @@ class configuration(object):
                         neighbor_state = [r_state[i] + delta_vec[i] for i in range(len(delta_vec))]
                         if plant is not None and (self.dynamics is 'MC' or self.dynamics is 'ABS'
                                                   or self.dynamics is 'Quadrotor' or self.dynamics is 'OtherBenchDisc1'
-                                                  or self.dynamics is 'InvPendulumD'):
+                                                  or self.dynamics is 'InvPendulumD' or self.dynamics is 'VertCAS'):
                             neighbor_trajectory = plant.getSimulations(states=[neighbor_state], do_not_parse=True)[0]
                         else:
                             # Added below r_time statement to take care of the warning - haven't tested it though.
@@ -277,20 +369,20 @@ class configuration(object):
                     states = generateRandomStates(samples, self.lowerBoundArray, self.upperBoundArray)
                     trajectories = plant.getSimulations(states=states)
                     return trajectories
-        elif self.dynamics is 'AeroBench':
-            aeroBenchSimObj = AeroBenchSim(dimensions=self.dimensions, timeStep=self.timeStep, steps=self.steps)
-            if r_states is not None:
-                trajectories = aeroBenchSimObj.getSimulations(states=r_states)
-                return trajectories
-            else:
-                if samples is None:
-                    states = generateRandomStates(self.samples, self.lowerBoundArray, self.upperBoundArray)
-                    self.trajectories = aeroBenchSimObj.getSimulations(states=states)
-                    return self.trajectories
-                else:
-                    states = generateRandomStates(samples, self.lowerBoundArray, self.upperBoundArray)
-                    trajectories = aeroBenchSimObj.getSimulations(states=states)
-                    return trajectories
+        # elif self.dynamics is 'AeroBench':
+        #     aeroBenchSimObj = AeroBenchSim(dimensions=self.dimensions, timeStep=self.timeStep, steps=self.steps)
+        #     if r_states is not None:
+        #         trajectories = aeroBenchSimObj.getSimulations(states=r_states)
+        #         return trajectories
+        #     else:
+        #         if samples is None:
+        #             states = generateRandomStates(self.samples, self.lowerBoundArray, self.upperBoundArray)
+        #             self.trajectories = aeroBenchSimObj.getSimulations(states=states)
+        #             return self.trajectories
+        #         else:
+        #             states = generateRandomStates(samples, self.lowerBoundArray, self.upperBoundArray)
+        #             trajectories = aeroBenchSimObj.getSimulations(states=states)
+        #             return trajectories
 
         if r_states is not None:
             r_time = np.linspace(0, self.timeStep * self.steps, self.steps + 1)

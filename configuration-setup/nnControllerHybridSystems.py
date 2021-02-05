@@ -92,15 +92,18 @@ class Plant(object):
     def __init__(self, model, dnn_control=None, dnn_transform=None, steps=1000):
         self.model = model
         self.steps = steps
-        self.dnn_controller = dnn_control
+        self.dnn_controllers = [dnn_control]
         self.dnn_transform = dnn_transform
+
+    def append_controller(self, dnn_control):
+        self.dnn_controllers.append(dnn_control)
 
     def simulate_MC(self, init_state):
         traj = []
         traj.append(np.array(init_state))
         prev_state = init_state
         # print(prev_state)
-        controller_output = self.dnn_controller.performForwardPass(prev_state)
+        controller_output = self.dnn_controllers[0].performForwardPass(prev_state)
         # print(controller_output[-1])
         prev_pos = prev_state[0]
         prev_vel = prev_state[1]
@@ -109,7 +112,7 @@ class Plant(object):
             next_pos = prev_pos + prev_vel
             next_vel = prev_vel + 0.0015*controller_output[-1] - 0.0025*np.cos(3*prev_pos)
             next_state = [next_pos, next_vel]
-            controller_output = self.dnn_controller.performForwardPass(next_state)
+            controller_output = self.dnn_controllers[0].performForwardPass(next_state)
             # print(controller_output[-1])
             traj.append(next_state)
             prev_pos = next_pos
@@ -122,7 +125,7 @@ class Plant(object):
         traj.append(np.array(init_state))
         prev_state = init_state
         # print(prev_state)
-        controller_output = self.dnn_controller.performForwardPass(prev_state)
+        controller_output = self.dnn_controllers[0].performForwardPass(prev_state)
         # print(controller_output[-1])
         prev_x = prev_state[0]
         prev_y = prev_state[1]
@@ -132,7 +135,7 @@ class Plant(object):
             next_x = prev_x + (prev_y - prev_x*prev_x*prev_x + prev_y*prev_x + noise) * dt
             next_y = prev_y - dt * (controller_output[-1] + prev_x*prev_y)
             next_state = [next_x, next_y]
-            controller_output = self.dnn_controller.performForwardPass(next_state)
+            controller_output = self.dnn_controllers[0].performForwardPass(next_state)
             # print(controller_output[-1])
             traj.append(next_state)
             prev_x = next_x
@@ -142,7 +145,7 @@ class Plant(object):
     def simulate_iPend(self, init_state):
         traj = []
         traj.append(np.array(init_state))
-        controller_output = self.dnn_controller.performForwardPass(init_state)
+        controller_output = self.dnn_controllers[0].performForwardPass(init_state)
         # print(controller_output[-1])
         prev_pos = init_state[0]
         prev_vel = init_state[1]
@@ -163,7 +166,7 @@ class Plant(object):
             next_state = np.matmul(A_matrix, prev_state) + B_matrix * controller_output[-1]
             next_state_flattened = next_state.flatten().tolist()
             traj.append(next_state_flattened)
-            controller_output = self.dnn_controller.performForwardPass(next_state_flattened)
+            controller_output = self.dnn_controllers[0].performForwardPass(next_state_flattened)
             prev_state = next_state
 
             # next_pos = prev_pos + 0.00947193803630617 * prev_vel - 0.000132627759153550 * prev_theta \
@@ -202,7 +205,7 @@ class Plant(object):
         v_rel_traj.append(v_rel)
         x_rel_traj.append(x_rel)
         controller_input = [v_set, t_gap, v_ego, x_rel, v_rel]
-        controller_output = self.dnn_controller.performForwardPass(controller_input)
+        controller_output = self.dnn_controllers[0].performForwardPass(controller_input)
         prev_lead_pos = init_state[0]
         prev_lead_vel = init_state[1]
         prev_lead_state = init_state[2]
@@ -231,7 +234,7 @@ class Plant(object):
             v_rel_traj.append(v_rel)
             x_rel_traj.append(x_rel)
             controller_input = [v_set, t_gap, v_ego, x_rel, v_rel]
-            controller_output = self.dnn_controller.performForwardPass(controller_input)
+            controller_output = self.dnn_controllers[0].performForwardPass(controller_input)
             traj.append(next_state_flattened)
             prev_state = next_state
 
@@ -291,7 +294,7 @@ class Plant(object):
         traj = []
         traj.append(np.array(init_state))
         prev_state = init_state
-        controller_output = self.dnn_controller.performForwardPass(prev_state)
+        controller_output = self.dnn_controllers[0].performForwardPass(prev_state)
         prev_pos_x = prev_state[0]
         prev_pos_y = prev_state[1]
         prev_pos_z = prev_state[2]
@@ -348,7 +351,7 @@ class Plant(object):
             next_vel_z = prev_vel_z + (u3 - 9.81)*step_size
 
             next_state = [next_pos_x, next_pos_y, next_pos_z, next_vel_x, next_vel_y, next_vel_z]
-            controller_output = self.dnn_controller.performForwardPass(next_state)
+            controller_output = self.dnn_controllers[0].performForwardPass(next_state)
             # print(controller_output[-1])
             traj.append(next_state)
             prev_pos_x = next_pos_x
@@ -407,7 +410,7 @@ class Plant(object):
             next_acc = prev_acc
             next_state = [next_pos, next_vel, next_acc]
 
-            brake = self.dnn_controller.performForwardPass(np.dot(norm_mat, np.array(next_state)))
+            brake = self.dnn_controllers[0].performForwardPass(np.dot(norm_mat, np.array(next_state)))
             normalized_vel = vel_scale * next_vel
             tf_input = [normalized_vel, brake[-1]]
             tf_output = self.dnn_transform.performForwardPass(tf_input)
@@ -431,6 +434,50 @@ class Plant(object):
         # plt.show()
         # plt.plot(vels)
         # plt.show()
+        return traj
+
+    def simulate_vertcas(self, init_state):
+        traj = []
+        g = 32.2
+        COC = [-g/8, 0, g/8]
+        DNC = [-g/3, -7*g/24, -g/4]
+        DND = [g/4, 7*g/24, g/3]
+        DES1500 = [-g / 3, -7 * g / 24, -g / 4]
+        CL1500 = DND
+        SDES1500 = [-g/3]
+        SCL1500 = [g/3]
+        SDES2500 = [-g/3]
+        SCL2500 = [g/3]
+        accelerations = [COC, DNC, DND, DES1500, CL1500, SDES1500, SCL1500, SDES2500, SCL2500]
+
+        prev_val_1 = init_state[0]
+        prev_val_2 = init_state[1]
+        prev_val_3 = init_state[2]
+        prev_state = init_state
+        traj.append(np.array(prev_state))
+        prev_adv = 0
+        for step in range(0, self.steps):
+            controller_outputs = self.dnn_controllers[prev_adv].performForwardPass(prev_state)
+            outputs = np.array(controller_outputs)
+            # max_output = np.amax(outputs)
+            # print(outputs)
+            max_output_idx = np.argmax(outputs)
+            # print(max_output_idx)
+            acceleration = accelerations[max_output_idx]
+            if len(acceleration) == 1:
+                acceleration = acceleration[0]
+            elif len(acceleration) == 3:
+                acceleration = acceleration[1]
+            next_val_1 = prev_val_1 - prev_val_2 - 0.5 * acceleration
+            next_val_2 = prev_val_2 + acceleration
+            next_val_3 = prev_val_3 - 1
+            prev_adv = max_output_idx
+            prev_val_1 = next_val_1
+            prev_val_2 = next_val_2
+            prev_val_3 = next_val_3
+            prev_state = [prev_val_1, prev_val_2, prev_val_3]
+            traj.append(prev_state)
+
         return traj
 
     def simulate_vehicle_platoon(self, init_state):
@@ -549,8 +596,10 @@ class Plant(object):
         return traj
 
     def getSimulations(self, states, do_not_parse=False):
-        if self.dnn_controller is not None and do_not_parse is False:
-            self.dnn_controller.parseDNNYML(self.model)
+        if self.dnn_controllers is not None and do_not_parse is False:
+            n_controllers = len(self.dnn_controllers)
+            for idx in range(n_controllers):
+                self.dnn_controllers[idx].parseDNNYML(self.model)
         if self.model is 'ABS' and do_not_parse is False:
             self.dnn_transform.parseDNNYML(self.model)
         # print("Generating Trajectories")
@@ -612,6 +661,12 @@ class Plant(object):
             for state in states:
                 # print("State {}".format(state))
                 traj = self.simulate_spiking_neuron(state)
+                trajectories += [np.array(traj)]
+            return trajectories
+        elif self.model is 'VertCAS':
+            for state in states:
+                # print("State {}".format(state))
+                traj = self.simulate_vertcas(state)
                 trajectories += [np.array(traj)]
             return trajectories
 

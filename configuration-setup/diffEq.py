@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def rhsODE(state, time, dynamics,plant):
 	# return the value that is given by the following function
 	# change this function to anything else you want.
@@ -47,8 +46,10 @@ def rhsODE(state, time, dynamics,plant):
 		return regularOscillator(state, time)
 	if dynamics is 'BiologicalModel1':
 		return biologicalModel_1(state, time)
+	if dynamics is 'BiologicalModel2':
+		return biologicalModel_2(state, time)
 	if dynamics is 'BouncingBall':
-		return bouncingball(state, time)
+		return bouncingball(state, time, plant)
 	if dynamics is 'Rober':
 		return rober(state, time)
 	if dynamics is 'E5':
@@ -69,6 +70,8 @@ def rhsODE(state, time, dynamics,plant):
 		return purepursuit(state, time)
 	if dynamics is 'InputSCancel':
 		return inputSCancel(state, time)
+	if dynamics is 'FiveDBenchmark':
+		return fiveDbenchmark(state, time)
 	if dynamics is 'OtherBenchC1':
 		return oBenchC1(state, time, plant)
 	if dynamics is 'OtherBenchC2':
@@ -85,14 +88,30 @@ def rhsODE(state, time, dynamics,plant):
 		return oBenchC7(state, time, plant)
 	if dynamics is 'OtherBenchC8':
 		return oBenchC8(state, time, plant)
-	if dynamics is 'ACCNonLinear':
+	if dynamics is 'ACCNonLinear3L' or dynamics is 'ACCNonLinear5L' or dynamics is 'ACCNonLinear7L' or dynamics is 'ACCNonLinear10L':
 		return accNonlinear(state, time, plant)
 	if dynamics is 'InvPendulumC':
 		return iPendulumC(state, time, plant)
-	if dynamics is 'CartPole':
+	if dynamics is 'CartPole' or dynamics is 'CartPoleTanh':
 		return cartPole(state, time, plant)
 	if dynamics is 'RobotArm':
 		return robotArm(state, time)
+	if dynamics is 'CartPoleLinControl':
+		return cartPolewLinearControl(state, time, plant)
+	if dynamics is 'CartPoleLinControl2':
+		return cartPolewLinearControl(state, time, plant)
+	if dynamics is 'OtherBenchC9':
+		return oBenchC9(state, time, plant)
+	if dynamics is 'OtherBenchC9Tanh' or dynamics is 'OtherBenchC9Sigmoid':
+		return oBenchC9hetero(state, time, plant)
+	if dynamics is 'SinglePendulum':
+		return singlePendulum(state, time, plant)
+	if dynamics is 'DoublePendulumLess' or dynamics is 'DoublePendulumMore':
+		return doublePendulum(state, time, plant)
+	if dynamics is 'OtherBenchC10':
+		return oBenchC10(state, time, plant)
+	if dynamics is 'Airplane':
+		return airplane(state, time, plant)
 
 
 def vanderpol(state, time):
@@ -113,31 +132,29 @@ def vanderpol(state, time):
 	return rhs
 
 
-def bouncingball(state, time):
+def bouncingball(state, time, plant):
 
 	x = state[0]
 	v = state[1]
 
-	dxdt = 0
-	dvdt = 0
+	print("x is " + str(x) + " and v is " + str(v))
 
-	if x == 0 and v <= 0:
+	# vel = plant.get_vel(state)
+	mode = plant.get_mode(state)
+
+	# if x == 0 and v <= 0:
+	# 	dxdt = v
+	# 	dvdt = -9.81
+	# else:
+	# 	dxdt = v
+	# 	dvdt = -100*x - 4*v - 9.81
+
+	if mode == 1:
 		dxdt = v
 		dvdt = -9.81
 	else:
 		dxdt = v
 		dvdt = -100*x - 4*v - 9.81
-
-	# dxdt = 0
-	# dvdt = 0
-	#
-	# if x == 0 and v <= 0:
-	# 	v = -0.75 * v
-	# 	dxdt = v
-	# 	dvdt = -9.81
-	# else:
-	# 	dxdt = v
-	# 	dvdt = -9.81
 
 	rhs = [dxdt, dvdt]
 	return rhs
@@ -585,6 +602,33 @@ def laubLoomis(state, time):
 	return rhs
 
 
+def biologicalModel_2(state, time):
+
+	x1 = state[0]
+	x2 = state[1]
+	x3 = state[2]
+	x4 = state[3]
+	x5 = state[4]
+	x6 = state[5]
+	x7 = state[6]
+	x8 = state[7]
+	x9 = state[8]
+
+	dx1dt = 50*x3 - x1*x6
+	dx2dt = 100*x4 - x2*x6
+	dx3dt = x1*x6 - 50*x3
+	dx4dt = x2*x6 - 100*x4
+	dx5dt = 500*x3 + 50*x1 - 10*x5
+	dx6dt = 50*x5 + 50*x3 + 100*x4 - x6*(x1 + x2 + 2*x8 + 1)
+	dx7dt = 50*x4 + 0.01*x2 - 0.5*x7
+	dx8dt = 5*x7 - 2*x6*x8 + x9 - 0.2*x8
+	dx9dt = 2*x6*x8 - x9
+
+	rhs = [dx1dt, dx2dt, dx3dt, dx4dt, dx5dt, dx6dt, dx7dt, dx8dt, dx9dt]
+
+	return rhs
+
+
 '''https://github.com/schillic/HA2Stateflow'''
 
 
@@ -608,7 +652,7 @@ def rober(state, time):
 def orego(state, time):
 	s = 77.27
 	w = 0.161
-	q = 0.008375
+	q = 0.08375
 
 	x = state[0]
 	y = state[1]
@@ -713,13 +757,44 @@ def inputSCancel(state, time):
 	return rhs
 
 
+def fiveDbenchmark(state, time):
+
+	x1 = state[0]
+	x2 = state[1]
+	x3 = state[2]
+	x4 = state[3]
+	x5 = state[4]
+
+	# dx1dt = 0.8*x2 - 2.5*x3 - x4
+	# dx2dt = - x1*x4 - x3
+	# dx3dt = - 0.5*x5
+	# dx4dt = 2*x3*x5
+	# dx5dt = x3 - 0.1*x4
+
+	dx1dt = 1.8*x2 - 2.2*x3 + 0.5*x2*x5
+	dx2dt = - x1*x4 - x3
+	dx3dt = - 0.5*x5
+	dx4dt = 3.0*x3*x5
+	dx5dt = 1.5*x3 - 0.1*x4
+
+	# dx1dt = -0.1*x1*x1 - 0.4*x1*x4 - x1+x2 + 3*x3 + 0.5*x4
+	# dx2dt = x2*x2 - 0.5*x2*x5 + x1 + x3
+	# dx3dt = 0.5*x3*x3 + x1 - x2 + 2*x3+ 0.1*x4 - 0.5*x5
+	# dx4dt = x2 + 2*x3 + 0.1*x4 - 0.2*x5 - 3.467*x1 + 1.11* x2 - 2.013*x3 + 0.6515*x4 + 2.3716*x5
+	# dx5dt = x3 - 0.1*x4 + 5 * x1 - 2.9971*x2 - 0.78656*x3 - 1.0308*x4 - 2.0555*x5
+
+	rhs = [dx1dt, dx2dt, dx3dt, dx4dt, dx5dt]
+
+	return rhs
+
 # https://github.com/verivital/ARCH-2019
+# https://easychair.org/publications/open/BFKs
 
 def oBenchC1(state, time, plant):
 	x = state[0]
 	y = state[1]
 
-	controller_output = plant.dnn_controller.performForwardPass(state)
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
 	u_inp = controller_output[-1]
 	# print("Hi inside diffEq")
 	# print(state, controller_output)
@@ -738,7 +813,7 @@ def oBenchC2(state, time, plant):
 	y = state[1]
 
 	w = 0.01
-	controller_output = plant.dnn_controller.performForwardPass(state)
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
 	u_inp = controller_output[-1]
 
 	dxdt = y
@@ -755,7 +830,7 @@ def oBenchC3(state, time, plant):
 	y = state[1]
 
 	w = 0.01
-	controller_output = plant.dnn_controller.performForwardPass(state)
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
 	u_inp = controller_output[-1] - 2
 
 	dxdt = -x * (0.1 + (x + y)**2)
@@ -773,7 +848,7 @@ def oBenchC4(state, time, plant):
 	z = state[2]
 
 	w = 0.01
-	controller_output = plant.dnn_controller.performForwardPass(state)
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
 	u_inp = controller_output[-1]
 
 	dxdt = y + 0.5 * z * z
@@ -792,7 +867,7 @@ def oBenchC5(state, time, plant):
 	z = state[2]
 
 	w = 0.01
-	controller_output = plant.dnn_controller.performForwardPass(state)
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
 	u_inp = controller_output[-1]
 
 	dxdt = -x + y - z + w
@@ -811,7 +886,7 @@ def oBenchC6(state, time, plant):
 	z = state[2]
 
 	w = 0.01
-	controller_output = plant.dnn_controller.performForwardPass(state)
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
 	u_inp = controller_output[-1]
 
 	dxdt = -x * x * x + y
@@ -830,7 +905,7 @@ def oBenchC7(state, time, plant):
 	z = state[2]
 
 	w = 0.0
-	controller_output = plant.dnn_controller.performForwardPass(state)
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
 	u_inp = (controller_output[-1] - 100) * 0.1
 
 	dxdt = z * z * z - y + w
@@ -849,8 +924,8 @@ def oBenchC8(state, time, plant):
 	x3 = state[2]
 	x4 = state[3]
 
-	controller_output = plant.dnn_controller.performForwardPass(state)
-	u_inp = controller_output[-1] -10
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
+	u_inp = controller_output[-1] - 10
 
 	dx1dt = x2
 	dx2dt = -9.8 * x3 + 1.6 * x3 * x3 * x3 + x1 * x4 * x4
@@ -863,13 +938,16 @@ def oBenchC8(state, time, plant):
 	return rhs
 
 
+# https://github.com/verivital/ARCH-2019
+# https://easychair.org/publications/open/BFKs
+
 def iPendulumC(state, time, plant):
 	x = state[0]  # position
 	v = state[1]  # velocity
 	z = state[2]  # theta
 	w = state[3]  #omega
 
-	controller_output = plant.dnn_controller.performForwardPass(state)
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
 	u_inp = controller_output[-1]
 
 	dxdt = v
@@ -882,6 +960,7 @@ def iPendulumC(state, time, plant):
 
 	return rhs
 
+# https://gitlab.com/goranf/ARCH-COMP/-/tree/master/2019/AINNCS/verisig/benchmarks/Cartpole
 
 def cartPole(state, time, plant):
 	x1 = state[0]
@@ -889,23 +968,26 @@ def cartPole(state, time, plant):
 	x3 = state[2]
 	x4 = state[3]
 
-	controller_output = plant.dnn_controller.performForwardPass(state)
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
 	if controller_output[0] > controller_output[1]:
-		u_inp = -10
+		u_inp = 1.3
 	else:
-		u_inp = 10
+		u_inp = 1.1
 
 	dx1dt = x2
 	dx2dt = ((u_inp + 0.05 * x4 * x4 * np.sin(x3))/1.1) - 0.05 * (9.8 * np.sin(x3) - np.cos(x3) *
 			((u_inp + 0.05 * x4 * x4 * np.sin(x3))/1.1)) / (0.5 * (4/3 - 0.1 * np.cos(x3) * np.cos(x3)/1.1)) * \
 			np.cos(x3)/1.1
+	# dx2dt = 10.0 * u_inp / 11.0 + x4**2 * np.sin(x3) / 22.0 + 10.0 * np.cos(x3) * (49.0 * np.sin(x3) / 100.0 - np.cos(x3) * (10.0 * u_inp / 11.0 + x4**2.0 * np.sin(x3) / 22.0) / 20.0) / (11.0 * (np.cos(x3)**2.0 / 22.0 - 0.6666666666666666))
 	dx3dt = x4
 	dx4dt = (9.8 * np.sin(x3) - np.cos(x3) * ((u_inp + 0.05 * x4 * x4 * np.sin(x3)) / 1.1)) / (
 				0.5 * (4 / 3 - 0.1 * np.cos(x3) * np.cos(x3) / 1.1))
+	# dx4dt = -(49.0 * np.sin(x3) / 5.0 - np.cos(x3) * (10.0 * u_inp / 11.0 + x4**2.0 * np.sin(x3) / 22.0)) / (np.cos(x3)**2.0 / 22.0 - 0.6666666666666666)
 
 	rhs = [dx1dt, dx2dt, dx3dt, dx4dt]
 
 	return rhs
+
 
 def accNonlinear(state, time, plant):
 	x1 = state[0]
@@ -923,12 +1005,12 @@ def accNonlinear(state, time, plant):
 	ac1 = -2
 
 	control_input = [v_set, t_gap, v_ego, x_rel, v_rel]
-	controller_output = plant.dnn_controller.performForwardPass(control_input)
+	controller_output = plant.dnn_controllers[0].performForwardPass(control_input)
 	ac2 = controller_output[-1]
 
 	dx1dt = v1
 	dv1dt = a1
-	da1dt = -2 * a1 + 2*ac1 - 0.0001 * v1 * v1
+	da1dt = -2 * a1 + 2 * ac1 - 0.0001 * v1 * v1
 	dx2dt = v2
 	dv2dt = a2
 	da2dt = -2 * a2 + 2 * ac2 - 0.0001 * v2 * v2
@@ -992,5 +1074,305 @@ def robotArm(state, time):
 	dwdt = y * z * z - y - w + 1
 
 	rhs = [dxdt, dydt, dzdt, dwdt]
+
+	return rhs
+
+
+# https://arxiv.org/pdf/2012.07458.pdf
+
+def cartPolewLinearControl(state, time, plant):
+
+	f = plant.get_controller_input(state)
+
+	M = 1
+	m = 0.001
+	g = 9.81
+	l = 1
+
+	sigma = state[0]
+	w = state[1]
+	x = state[2]
+	theta = state[3]
+
+	dsigmadt = (f * np.cos(theta) - m * l * sigma * sigma * np.cos(theta) * np.sin(theta) + (m + M) * g * np.sin(theta))/(l * (M + m * np.sin(theta) * np.sin(theta)))
+	dwdt = (f + m * np.sin(theta) * (-l * sigma * sigma + g * np.cos(theta)))/(M + m * np.sin(theta) * np.sin(theta))
+	dxdt = w
+	dthetadt = sigma
+
+	rhs = [dsigmadt, dwdt, dxdt, dthetadt]
+
+	return rhs
+
+
+# http://www.roboticsproceedings.org/rss07/p41.pdf
+
+def cartPoleLinearControl2(state, time, plant):
+	f = plant.get_controller_input(state)
+
+	pos = state[0]
+	theta = state[1]
+	vel = state[2]
+	avel = state[3]  # ang velocity
+
+	dposdt = vel
+	dthetadt = avel
+	dveldt = -0.75 * theta * theta * theta - 0.01 * theta * theta * f - 0.05 * theta * avel * avel + 0.98 * theta + 0.1 * f
+	daveldt = -5.75 * theta * theta * theta - 0.12 * theta * theta * f - 0.1 * theta * avel * avel + 21.56 * theta + 0.2 * f
+
+	rhs = [dposdt, dthetadt, dveldt, daveldt]
+
+	return rhs
+
+# https://easychair.org/publications/open/Jvwg
+
+
+def oBenchC9(state, time, plant):
+	x1 = state[0]
+	x2 = state[1]
+	x3 = state[2]
+	x4 = state[3]
+
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
+	u_inp = controller_output[-1] - 10
+
+	dx1dt = x2
+	dx2dt = - x1 + 0.1 * np.sin(x3)
+	dx3dt = x4
+	dx4dt = u_inp
+
+	rhs = [dx1dt, dx2dt, dx3dt, dx4dt]
+	# print(controller_output)
+
+	return rhs
+
+
+def oBenchC9hetero(state, time, plant):
+	x1 = state[0]
+	x2 = state[1]
+	x3 = state[2]
+	x4 = state[3]
+
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
+	u_inp = controller_output[-1]
+
+	dx1dt = x2
+	dx2dt = - x1 + 0.1 * np.sin(x3)
+	dx3dt = x4
+	dx4dt = u_inp
+
+	rhs = [dx1dt, dx2dt, dx3dt, dx4dt]
+
+	return rhs
+
+
+def singlePendulum(state, time, plant):
+	x = state[0]
+	y = state[1]
+	# z = state[2]
+	l = 0.5
+	m = 0.5
+	g = 1
+	c = 0
+
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
+	u_inp = controller_output[-1]
+
+	dxdt = y
+	dydt = (g / l) * np.sin(x) + (u_inp - c * y) / (m * l**2)
+	# dzdt = 20
+
+	rhs = [dxdt, dydt]
+
+	return rhs
+
+# https://github.com/amaleki2/benchmark_closedloop_verification
+
+
+def doublePendulum(state, time, plant):
+	th1 = state[0]
+	th2 = state[1]
+	u1 = state[2]
+	u2 = state[3]
+
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
+	# u_inp = controller_output
+	# print(controller_output, u_inp)
+	T1 = controller_output[0]
+	T2 = controller_output[1]
+
+	dx1dt = u1
+	dx2dt = u2
+	dx3dt = 4 * T1 + 2*np.sin(th1) - (u2 * u2 * np.sin(th1 - th2))/2 + (np.cos(th1 - th2)*(np.sin(th1 - th2) * u1 * u1 +
+			8 * T2 + 2 * np.sin(th2) - np.cos(th1 - th2) * (- (np.sin(th1 - th2)*u2 * u2)/2 + 4 * T1 + 2 * np.sin(th1))))/(2 * (np.cos(th1 - th2)**2/2 - 1))
+	dx4dt = -(np.sin(th1 - th2)*u1**2 + 8 * T2 + 2 * np.sin(th2) - np.cos(th1 - th2) * (- (np.sin(th1 - th2)*u2**2)/2 +
+															4 * T1 + 2 * np.sin(th1)))/(np.cos(th1 - th2)**2/2 - 1)
+
+	rhs = [dx1dt, dx2dt, dx3dt, dx4dt]
+
+	return rhs
+
+
+def oBenchC10(state, time, plant):
+	x1 = state[0]
+	x2 = state[1]
+	x3 = state[2]
+	x4 = state[3]
+
+	controller_output = plant.dnn_controllers[0].performForwardPass(state)
+	u1 = controller_output[0] - 20
+	u2 = controller_output[1] - 20
+
+	dx1dt = x4 * np.cos(x3)
+	dx2dt = x4 * np.sin(x3)
+	dx3dt = u2
+	dx4dt = u1
+
+	rhs = [dx1dt, dx2dt, dx3dt, dx4dt]
+
+	return rhs
+
+
+def airplane_old(state, time, plant):
+	x = state[0]
+	y = state[1]
+	z = state[2]
+	u = state[3]
+	v = state[4]
+	w = state[5]
+	phi = state[6]
+	theta = state[7]
+	psi = state[8]
+	r = state[9]
+	p = state[10]
+	q = state[11]
+
+	actions = plant.dnn_controller.performForwardPass(state)
+
+	Fx = actions[0]
+	Fy = actions[1]
+	Fz = actions[2]
+	Mx = actions[3]
+	My = actions[4]
+	Mz = actions[5]
+
+	T_psi = np.array([[np.cos(psi), -np.sin(psi), 0.0], [np.sin(psi), np.cos(psi), 0.0], [0.0, 0.0, 1.0]], dtype=float)
+	T_theta = np.array([[np.cos(theta), 0.0, np.sin(theta)], [0.0, 1.0, 0.0], [-np.sin(theta), 0.0, np.cos(theta)]], dtype=float)
+	T_phi = np.array([[1.0, 0.0, 0.0], [0., np.cos(phi), -np.sin(phi)], [0., np.sin(phi), np.cos(phi)]], dtype=float)
+
+	mat_1 = np.matmul(np.matmul(T_psi, T_theta), T_phi)
+
+	mat_2 = np.array([[np.cos(theta), np.sin(theta) * np.sin(phi), np.sin(theta) * np.cos(phi)],
+					[0.0, np.cos(theta) * np.cos(phi), -np.cos(theta) * np.sin(phi)],
+					[0.0, np.sin(phi), np.cos(phi)]], dtype=float)
+	# mat_2 = np.divide(mat_2, np.cos(theta))
+	mat_2 = 1 / np.cos(theta) * mat_2
+
+	# a1 = np.array([[u], [v], [w]], dtype=float)
+	# a2 = np.matmul(mat_1, a1)
+	a1 = np.array([u, v, w]).T
+	a2 = mat_1.dot(a1)
+
+	# a2 = a2.flatten()
+	dxdt = a2[0]
+	dydt = a2[1]
+	dzdt = a2[2]
+
+	# a3 = np.array([[p], [q], [r]], dtype=float)
+	# a4 = np.matmul(mat_2, a3)
+	a3 = np.array([p, q, r]).T
+	a4 = mat_2.dot(a3)
+
+	# a4 = a4.flatten()
+	dphidt = a4[0]
+	dthetadt = a4[1]
+	dpsidt = a4[2]
+
+	dudt = -np.sin(theta) + Fx - q * w + r * v
+	dvdt = np.cos(theta) * np.sin(phi) + Fy - r * u + p * w
+	dwdt = np.cos(theta) * np.cos(phi) + Fz - p * v + q * u
+
+	dpdt = Mx
+	dqdt = My
+	drdt = Mz
+
+	rhs = [dxdt, dydt, dzdt, dudt, dvdt, dwdt, dphidt, dthetadt, dpsidt, dpdt, dqdt, drdt]
+
+	return rhs
+
+
+def airplane(state, time, plant):
+	m = 1.
+	Ix = 1.
+	Iy = 1.
+	Iz = 1.
+	Ixz = 0.
+	g = 1.
+
+	x = state[0]
+	y = state[1]
+	z = state[2]
+	u = state[3]
+	v = state[4]
+	w = state[5]
+	phi = state[6]
+	theta = state[7]
+	psi = state[8]
+	r = state[9]
+	p = state[10]
+	q = state[11]
+
+	actions = plant.dnn_controllers[0].performForwardPass(state)
+
+	X = actions[0]
+	Y = actions[1]
+	Z = actions[2]
+	L = actions[3]
+	M = actions[4]
+	N = actions[5]
+
+	T_psi = np.array([[np.cos(psi), -np.sin(psi), 0.0], [np.sin(psi), np.cos(psi), 0.0], [0.0, 0.0, 1.0]], dtype=float)
+	T_theta = np.array([[np.cos(theta), 0.0, np.sin(theta)], [0.0, 1.0, 0.0], [-np.sin(theta), 0.0, np.cos(theta)]], dtype=float)
+	T_phi = np.array([[1.0, 0.0, 0.0], [0., np.cos(phi), -np.sin(phi)], [0., np.sin(phi), np.cos(phi)]], dtype=float)
+
+	mat_1 = np.matmul(np.matmul(T_psi, T_theta), T_phi)
+
+	mat_2 = np.array([[np.cos(theta), np.sin(theta) * np.sin(phi), np.sin(theta) * np.cos(phi)],
+					[0.0, np.cos(theta) * np.cos(phi), -np.cos(theta) * np.sin(phi)],
+					[0.0, np.sin(phi), np.cos(phi)]], dtype=float)
+	mat_2 = 1 / np.cos(theta) * mat_2
+
+	a1 = np.array([u, v, w]).T
+	a2 = mat_1.dot(a1)
+
+	dxdt = a2[0]
+	dydt = a2[1]
+	dzdt = a2[2]
+
+	a3 = np.array([p, q, r]).T
+	a4 = mat_2.dot(a3)
+
+	dphidt = a4[0]
+	dthetadt = a4[1]
+	dpsidt = a4[2]
+
+	a5 = np.array([
+		[Ix, Ixz],
+		[Ixz, Iz]
+	])
+	a6 = np.array([
+		[L - (Iz - Iy) * q * r - Ixz * q * p],
+		[N - (Iy - Ix) * q * p + Ixz * q * r]
+	])
+	a7 = np.linalg.inv(a5).dot(a6)
+
+	dudt = -g * np.sin(theta) + X / m - q * w + r * v
+	dvdt = g * np.cos(theta) * np.sin(phi) + Y / m - r * u + p * w
+	dwdt = g * np.cos(theta) * np.cos(phi) + Z / m - p * v + q * u
+
+	dpdt = a7[0][0]
+	dqdt = 1. / Iy * (M - Ixz * (r ** 2 - p ** 2) - (Ix - Iz) * p * r)
+	drdt = a7[1][0]
+
+	rhs = [dxdt, dydt, dzdt, dudt, dvdt, dwdt, dphidt, dthetadt, dpsidt, dpdt, dqdt, drdt]
 
 	return rhs
