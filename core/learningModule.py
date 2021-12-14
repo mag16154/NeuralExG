@@ -34,7 +34,7 @@ class DataConfiguration(configuration):
                                gradient_run=gradient_run)
         self.data = []
         self.dimensions = dimensions
-        self.eval_dir = '../../eval-cav/'
+        self.eval_dir = '../../../eval-hscc'
         self.sensitivity = sensitivity
 
     def dumpDataConfiguration(self):
@@ -185,11 +185,14 @@ class DataConfiguration(configuration):
     def createData(self, dim=-1, jumps=[1]):
         assert self.lowerBoundArray is not [] and self.upperBoundArray is not []
         assert dim < self.dimensions
-        self.dumpDataConfiguration()
 
         if self.grad_run is True:
+            self.eval_dir = self.eval_dir + '/eval-gr'
+            self.dumpDataConfiguration()
             return self.createData4GradRun(jumps)
 
+        self.eval_dir = self.eval_dir + '/eval-non-gr'
+        self.dumpDataConfiguration()
         traj_combs = []
 
         end_idx = self.samples
@@ -208,15 +211,24 @@ class DataConfiguration(configuration):
             traj_1 = self.trajectories[t_pair[0]]
             traj_2 = self.trajectories[t_pair[1]]
             x_idx = 0
+            v_val = traj_2[x_idx] - traj_1[x_idx]
+            x_val = traj_1[x_idx]
+            x_dv_val = traj_2[x_idx]
+            v_dv_val = traj_1[x_idx] - traj_2[x_idx]
             for jump in jumps:
-                v_val = traj_2[x_idx] - traj_1[x_idx]
                 for step in range(1, (steps - jump), jump):
-                    xList.append(traj_1[x_idx])
-                    vList.append(v_val)
                     t_val = step
+                    xList.append(x_val)
+                    vList.append(v_val)
                     xpList.append(traj_1[t_val])
                     vp_val = traj_2[t_val] - traj_1[t_val]
                     vpList.append(vp_val)
+                    tList.append(t_val * self.timeStep)
+
+                    xList.append(x_dv_val)
+                    vList.append(v_dv_val)
+                    xpList.append(traj_2[t_val])
+                    vpList.append(traj_1[t_val] - traj_2[t_val])
                     tList.append(t_val * self.timeStep)
 
         xList = np.asarray(xList)
@@ -287,6 +299,8 @@ class CreateTrainNN(NNConfiguration):
                 return
 
         self.eval_dir = data_object.getEvalDir()
+        print(self.eval_dir)
+        print(data_object.getGradientRun())
         inp_indices = []
         out_indices = []
         data = data_object.getData()
@@ -395,6 +409,13 @@ class CreateTrainNN(NNConfiguration):
         # in the first layer, you must specify the expected input data shape:
         # here, 20-dimensional vectors.
 
+        if optim is 'Adam':
+            optimizer = Adam(learning_rate=self.learning_rate, beta_1=0.9, beta_2=0.999, amsgrad=False)
+        elif optim is 'RMSProp':
+            optimizer = RMSprop()
+        else:
+            optimizer = SGD(learning_rate=self.learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
+
         if self.DNN_or_RBF == 'dnn':
             model.add(Dense(neurons, activation=act, input_dim=self.input_size))
             start_neurons = neurons
@@ -404,15 +425,15 @@ class CreateTrainNN(NNConfiguration):
                 model.add(BatchNormalization())
             model.add(Dense(self.output_size, activation='linear'))
 
-            if optim is 'Adam':
-                optimizer = Adam(learning_rate=self.learning_rate, beta_1=0.9, beta_2=0.999, amsgrad=False)
-            elif optim is 'RMSProp':
-                optimizer = RMSprop(learning_rate=self.learning_rate, rho=0.9)
-            else:
-                optimizer = SGD(learning_rate=self.learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
+            # if optim is 'Adam':
+            #     optimizer = Adam(learning_rate=self.learning_rate, beta_1=0.9, beta_2=0.999, amsgrad=False)
+            # elif optim is 'RMSProp':
+            #     optimizer = RMSprop(learning_rate=self.learning_rate, rho=0.9)
+            # else:
+            #     optimizer = SGD(learning_rate=self.learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
 
             if loss_fn is 'mse':
-                model.compile(loss=mean_squared_error, optimizer=optimizer, metrics=['accuracy'])
+                model.compile(loss=mean_squared_error, optimizer=optimizer, metrics=['accuracy', 'mae'])
             elif loss_fn is 'mae':
                 model.compile(loss=mean_absolute_error, optimizer=optimizer, metrics=['accuracy', 'mse'])
             elif loss_fn is 'mape':
@@ -466,8 +487,17 @@ class CreateTrainNN(NNConfiguration):
                 model.add(BatchNormalization())
             model.add(outputlayer)
 
-            model.compile(loss='mean_absolute_error',
-                          optimizer=RMSprop(), metrics=['accuracy', 'mse'])  # mae is better
+            if loss_fn is 'mse':
+                model.compile(loss=mean_squared_error, optimizer=optimizer, metrics=['accuracy', 'mae'])
+            elif loss_fn is 'mae':
+                model.compile(loss=mean_absolute_error, optimizer=optimizer, metrics=['accuracy', 'mse'])
+            elif loss_fn is 'mape':
+                model.compile(loss=mean_absolute_percentage_error, optimizer=optimizer, metrics=['accuracy', 'mse'])
+            elif loss_fn is 'mre':
+                model.compile(loss=mre_loss, optimizer=optimizer, metrics=['accuracy', 'mse'])
+
+            # model.compile(loss='mean_absolute_error',
+            #               optimizer=RMSprop(), metrics=['accuracy', 'mse'])  # mae is better
 
             # fit and predict
             model.fit(inputs_train, targets_train,
@@ -479,7 +509,7 @@ class CreateTrainNN(NNConfiguration):
         print(predicted_train.shape)
 
         if self.predict_var is 'v':
-            v_f_name = self.eval_dir + "models/model_vp_2_v_"
+            v_f_name = self.eval_dir + "/models/model_vp_2_v_"
             v_f_name = v_f_name + str(self.dynamics)
             v_f_name = v_f_name + "_" + self.DNN_or_RBF
             # weights_f_name = v_f_name
@@ -495,7 +525,7 @@ class CreateTrainNN(NNConfiguration):
             # with open(weights_f_name, "w") as yaml_file:
             #     yaml_file.write(model_yaml)
         elif self.predict_var is 'vp':
-            vp_f_name = self.eval_dir + "models/model_v_2_vp_"
+            vp_f_name = self.eval_dir + "/models/model_v_2_vp_"
             vp_f_name = vp_f_name + str(self.dynamics)
             vp_f_name = vp_f_name + "_" + self.DNN_or_RBF
             vp_f_name = vp_f_name + "_" + str(layers)

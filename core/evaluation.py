@@ -7,12 +7,14 @@ from rbflayer import RBFLayer, InitCentersRandom
 
 
 class Evaluation(object):
-    def __init__(self, dynamics, sensitivity, dnn_rbf, layers, neurons, act_fn):
+    def __init__(self, dynamics, sensitivity, dnn_rbf, layers, neurons, act_fn, grad_run):
         self.data_object = None
         self.debug_print = False
         self.dynamics = dynamics
         self.iter_count = 10
-        self.eval_dir = '../../eval-cav/'
+        self.eval_dir = '../../../eval-hscc/eval-gr'
+        if grad_run is False:
+            self.eval_dir = '../../../eval-hscc/eval-non-gr'
         self.sensitivity = sensitivity
         self.network = self.EvalNetwork(dnn_rbf, layers, neurons, act_fn)
 
@@ -26,11 +28,12 @@ class Evaluation(object):
     def setDataObject(self, d_obj_f_name=None):
 
         if d_obj_f_name is None and self.sensitivity is 'Inv':
-            d_obj_f_name = self.eval_dir + 'dconfigs_inv/d_object_'+self.dynamics
+            d_obj_f_name = self.eval_dir + '/dconfigs_inv/d_object_'+self.dynamics
         elif d_obj_f_name is None and self.sensitivity is 'Fwd':
-            d_obj_f_name = self.eval_dir + 'dconfigs_fwd/d_object_'+self.dynamics
+            d_obj_f_name = self.eval_dir + '/dconfigs_fwd/d_object_'+self.dynamics
 
         d_obj_f_name = d_obj_f_name + '.txt'
+        print(d_obj_f_name)
 
         if path.exists(d_obj_f_name):
             d_obj_f = open(d_obj_f_name, 'r')
@@ -117,7 +120,7 @@ class Evaluation(object):
         return output
 
     def dumpModel(self):
-        model_file = self.eval_dir + 'models/controllerTora_nnv.h5'
+        model_file = self.eval_dir + '/models/controllerTora_nnv.h5'
         model_v = load_model(model_file, compile=False)
         yaml_model = model_v.to_yaml()
         with open('controllerTora.yaml', 'w') as yaml_file:
@@ -133,15 +136,16 @@ class Evaluation(object):
         def getNetworkModel(self, eval_dir, sensitivity, dynamics):
             model_f_name = eval_dir
             if sensitivity is 'Fwd':
-                model_f_name = model_f_name + 'models/model_v_2_vp_'
+                model_f_name = model_f_name + '/models/model_v_2_vp_'
             else:
-                model_f_name = model_f_name + 'models/model_vp_2_v_'
+                model_f_name = model_f_name + '/models/convergence-more-data/model_vp_2_v_'
             model_f_name = model_f_name + dynamics + "_" + self.dnn_rbf
             model_f_name = model_f_name + "_" + str(self.layers)
             model_f_name = model_f_name + "_" + str(self.neurons)
             model_f_name = model_f_name + "_" + self.act_fn
             model_f_name = model_f_name + '.h5'
             trained_model = None
+            print(model_f_name)
             if path.exists(model_f_name):
                 if self.dnn_rbf is 'dnn':
                     trained_model = load_model(model_f_name, compile=True)

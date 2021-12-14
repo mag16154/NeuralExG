@@ -112,6 +112,12 @@ def rhsODE(state, time, dynamics,plant):
 		return oBenchC10(state, time, plant)
 	if dynamics is 'Airplane':
 		return airplane(state, time, plant)
+	if dynamics is 'Scalable5D':
+		return scalable5D(state, time)
+	if dynamics is 'DuffingOsc':
+		return duffingOsc(state, time)
+	if dynamics is 'AcuteInflame':
+		return acuteInflame(state, time)
 
 
 def vanderpol(state, time):
@@ -756,6 +762,94 @@ def inputSCancel(state, time):
 
 	return rhs
 
+# Simulation Based Computation of
+# Certificates for Safety of Hybrid Dynamical Systems
+# Stefan Ratschan Oct 2018
+
+
+def scalable5D(state, time):
+	x1 = state[0]
+	x2 = state[1]
+	x3 = state[2]
+	x4 = state[3]
+	x5 = state[4]
+
+	dx1dt = 1 + 0.5 * (x2 + 2 * x3 + x4)
+	dx2dt = x3
+	dx3dt = -10 * np.sin(x2) - x2
+	dx4dt = x5
+	dx5dt = -10 * np.sin(x4) - x2
+
+	rhs = [dx1dt, dx2dt, dx3dt, dx4dt, dx5dt]
+
+	return rhs
+
+# https://arxiv.org/pdf/2104.13902.pdf
+# dataObject.setLowerBound([0.95, -0.05])
+# dataObject.setUpperBound([1.05, 0.05])
+
+
+def duffingOsc(state, time):
+	alpha = 0.05
+	gamma = 0.4
+	omega = 1.3
+	x1 = state[0]
+	x2 = state[1]
+
+	dx1dt = x2
+	dx2dt = -alpha * x2 + x1 - x1*x1*x1 + gamma * np.cos(omega * time)
+
+	rhs = [dx1dt, dx2dt]
+
+	return rhs
+
+# Breach
+# https://www.mathematics.pitt.edu/sites/default/files/research-pdfs/reynolds.pdf
+
+
+def acuteInflame(state, time):
+	k_pm = 0.6
+	k_mp = 0.01
+	s_m = 0.005
+	u_m = 0.002
+	k_pg = 0.3
+	p_inf = 20 * 1000**2
+	k_pn = 1.8
+	k_np = 0.1
+	k_nn = 0.01
+	s_nr = 0.08
+	u_nr = 0.12
+	u_n = 0.05
+	k_nd = 0.02
+	k_dn = 0.35
+	x_dn = 0.06
+	u_d = 0.02
+	c_inf = 0.28
+	s_c = 0.0125
+	k_cn = 0.04
+	k_cnd = 48
+	u_c = 0.1
+
+	P = state[0]
+	Na = state[1]
+	D = state[2]
+	Ca = state[3]
+
+	def f1(arg1):
+		return arg1/(1+(Ca/c_inf)**2)
+
+	def fs(arg2):
+		return (arg2**6)/(x_dn**6 + arg2**6)
+
+	dPdt = k_pg * P * (1 - (P/p_inf)) - (k_pm * s_m * P)/(u_m + k_mp * P) - k_pn * f1(Na) * P
+	dNadt = (s_nr * f1(k_nn*Na + k_np*P + k_nd*D))/(u_nr + f1(k_nn*Na + k_np*P + k_nd*D)) - u_n * Na
+	dDdt = k_dn * fs(f1(Na)) - u_d * D
+	dCadt = s_c + (k_cn * f1(Na + k_cnd * D))/(1 + f1(Na + k_cnd*D)) - u_c * Ca
+
+	rhs = [dPdt, dNadt, dDdt, dCadt]
+
+	return rhs
+
 
 def fiveDbenchmark(state, time):
 
@@ -789,6 +883,7 @@ def fiveDbenchmark(state, time):
 
 # https://github.com/verivital/ARCH-2019
 # https://easychair.org/publications/open/BFKs
+
 
 def oBenchC1(state, time, plant):
 	x = state[0]
@@ -945,7 +1040,7 @@ def iPendulumC(state, time, plant):
 	x = state[0]  # position
 	v = state[1]  # velocity
 	z = state[2]  # theta
-	w = state[3]  #omega
+	w = state[3]  # omega
 
 	controller_output = plant.dnn_controllers[0].performForwardPass(state)
 	u_inp = controller_output[-1]
@@ -961,6 +1056,7 @@ def iPendulumC(state, time, plant):
 	return rhs
 
 # https://gitlab.com/goranf/ARCH-COMP/-/tree/master/2019/AINNCS/verisig/benchmarks/Cartpole
+
 
 def cartPole(state, time, plant):
 	x1 = state[0]
